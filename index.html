@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>拍摄任务生成器 — 闪电狗AI快聘</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;background:#f5f5f5;color:#1a1a1a;min-height:100vh;-webkit-font-smoothing:antialiased}
+#app{max-width:480px;margin:0 auto;padding:16px 16px 80px}
+.fade-in{animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.header{text-align:center;padding:24px 0 8px}
+.header h1{font-size:20px;font-weight:700;color:#1a1a1a}
+.header .sub{font-size:13px;color:#888;margin-top:6px}
+.card{background:#fff;border-radius:16px;padding:20px;margin-top:16px;box-shadow:0 2px 12px rgba(0,0,0,.06)}
+.card h2{font-size:17px;font-weight:600;margin-bottom:14px}
+.card h3{font-size:15px;font-weight:600;margin-bottom:10px;color:#333}
+.intro-list{list-style:none;padding:0}
+.intro-list li{padding:10px 0;border-bottom:1px solid #f0f0f0;font-size:14px;color:#444;line-height:1.6}
+.intro-list li:last-child{border:none}
+.intro-list .num{display:inline-block;width:22px;height:22px;border-radius:50%;background:#ff6b35;color:#fff;text-align:center;line-height:22px;font-size:12px;font-weight:600;margin-right:8px}
+.progress-bar{height:4px;background:#eee;border-radius:2px;margin-bottom:20px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,#ff6b35,#ff8f5e);border-radius:2px;transition:width .3s ease}
+.q-title{font-size:16px;font-weight:600;margin-bottom:16px;line-height:1.5}
+.q-step{font-size:12px;color:#ff6b35;font-weight:600;margin-bottom:8px}
+.option{display:block;width:100%;text-align:left;background:#fafafa;border:2px solid #eee;border-radius:14px;padding:14px 16px;margin-bottom:10px;cursor:pointer;transition:all .2s}
+.option:active,.option:hover{border-color:#ff6b35;background:#fff8f5}
+.option.selected{border-color:#ff6b35;background:#fff3ed}
+.option .opt-label{font-size:15px;font-weight:600;color:#1a1a1a}
+.option .opt-desc{font-size:13px;color:#888;margin-top:4px;line-height:1.4}
+.btn{display:inline-flex;align-items:center;justify-content:center;border:none;border-radius:12px;padding:12px 20px;font-size:15px;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-primary{background:linear-gradient(135deg,#ff6b35,#ff8f5e);color:#fff;width:100%;margin-top:16px}
+.btn-primary:active{transform:scale(.98)}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed}
+.btn-ghost{background:#f5f5f5;color:#555;margin-top:10px;width:100%}
+.btn-ghost:active{background:#eee}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.btn-sm{padding:8px 14px;font-size:13px;border-radius:10px;border:1px solid #ddd;background:#fff;color:#333;cursor:pointer}
+.btn-sm:active{background:#f5f5f5}
+.btn-sm.copied{background:#e8f5e9;border-color:#4caf50;color:#2e7d32}
+.result-section{margin-top:16px}
+.result-section:first-child{margin-top:0}
+.section-label{font-size:12px;color:#ff6b35;font-weight:600;text-transform:uppercase;margin-bottom:8px;letter-spacing:.5px}
+.section-content{font-size:14px;line-height:1.7;color:#333;white-space:pre-wrap}
+.section-content ul{list-style:none;padding:0}
+.section-content li{padding:4px 0;position:relative;padding-left:16px}
+.section-content li::before{content:"•";position:absolute;left:0;color:#ff6b35}
+.title-item{background:#fafafa;border-radius:10px;padding:10px 12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.title-text{font-size:14px;flex:1}
+.title-tag{font-size:11px;color:#ff6b35;white-space:nowrap}
+.check-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.check-item{font-size:12px;padding:6px 8px;border-radius:8px;background:#f0fdf4;color:#166534;display:flex;align-items:center;gap:4px}
+.check-item.fail{background:#fef2f2;color:#991b1b}
+.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;z-index:999;animation:toastIn .3s ease}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+.version-tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:6px;background:#f0f7ff;color:#2563eb;margin-left:6px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// ============================================================
+// QUESTIONS (unchanged)
+// ============================================================
+const QUESTIONS = [
+  {
+    key: 'video_type', step: '第1题 / 共4题', title: '这条视频你准备拍哪一种？',
+    options: [
+      { value: '真实试用型', label: '拍我试了之后的真实感觉', desc: '就是拍你自己试了闪电狗以后，觉得哪里好用、哪里方便' },
+      { value: '避坑经历型', label: '拍我以前找工作踩过的坑', desc: '就是讲你以前找工作被坑过什么，现在为什么更在意工资和岗位是不是真的' },
+      { value: '效率挑战型', label: '拍我现场试试看闪电狗到底快不快', desc: '就是你边操作边拍，看看选好岗位后约面试到底有多快' },
+      { value: '经验提问型', label: '拍一个找工作的问题，顺便带大家评论', desc: '就是先聊一个大家都关心的找工作问题，再自然带出闪电狗' },
+    ]
+  },
+  {
+    key: 'main_point', step: '第2题 / 共4题', title: '这条视频你最想说哪个点？',
+    options: [
+      { value: '岗位真实_薪资真实', label: '上面的工资和岗位信息是不是真的', desc: '就说"不骗人，写多少就是多少，干什么活也说清楚"' },
+      { value: 'AI按条件推荐岗位', label: '跟AI说要求，它能不能直接推荐合适岗位', desc: '就说"不用自己一个个翻岗位，跟AI说几句，它就按要求推荐"' },
+      { value: '选好岗位后几秒约面_全流程2到3分钟', label: '选好岗位后，约面试到底有多快', desc: '就说"选好岗位后几秒就能约面，全流程两三分钟"' },
+    ]
+  },
+  {
+    key: 'shoot_mode', step: '第3题 / 共4题', title: '你拍起来最顺手的是哪种？',
+    options: [
+      { value: '对镜口播_录屏补充', label: '我对着镜头直接说', desc: '适合愿意露脸，自己对着手机讲几句的人' },
+      { value: '纯录屏_配音', label: '我录手机画面，再配音', desc: '适合不想露脸，只想录操作过程再配几句说明的人' },
+      { value: '环境画面_字幕配音', label: '我拍点上班、宿舍、路上的画面', desc: '适合拍生活画面，再配字幕或者配音的人' },
+      { value: '边拍边说', label: '我边走边拍，边说几句', desc: '适合想拍得更自然一点，不想太正式的人' },
+    ]
+  },
+  {
+    key: 'script_mode', step: '第4题 / 共4题', title: '你想要哪种文案？',
+    options: [
+      { value: '提纲版', label: '给我一个提纲，我自己说', desc: '给你每一段说什么，你自己按自己的话拍' },
+      { value: '逐句版', label: '给我现成的话，我直接照着说', desc: '一句一句写好，你照着念、照着拍就行' },
+    ]
+  }
+];
+
+// ============================================================
+// UTILITY: random sampling with dedup
+// ============================================================
+function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function pickN(arr, n, exclude) {
+  var pool = exclude ? arr.filter(function(x){ return exclude.indexOf(x) === -1; }) : arr.slice();
+  if (pool.length < n) pool = arr.slice();
+  var result = [];
+  var used = {};
+  while (result.length < n && Object.keys(used).length < pool.length) {
+    var idx = Math.floor(Math.random() * pool.length);
+    if (!used[idx]) { used[idx] = true; result.push(pool[idx]); }
+  }
+  return result;
+}
+function pickRandomExcluding(arr, excludeItem) {
+  var pool = arr.filter(function(x){ return x !== excludeItem; });
+  return pool.length > 0 ? pickRandom(pool) : pickRandom(arr);
+}
+function hashCard(c) {
+  return [c.opening[0], c.titles[0], c.comment_questions[0], c.script[1]||''].join('|');
+}
+
+// ============================================================
+// MATERIAL POOLS — per main_point
+// ============================================================
+var POOLS = {
+// -------------------------------------------------------
+// POOL 1: AI按条件推荐岗位
+// -------------------------------------------------------
+'AI按条件推荐岗位': {
+  hook: [
+    '你们有没有那种感觉，找工作的时候翻招工信息翻到头疼？',
+    '找工作最烦的是什么？就是自己一条条翻，翻半天也不知道哪个合适。',
+    '每次找工作都要刷好久招工信息，看得眼睛都花了，有没有同感？',
+    '你们找工作是不是也这样，看了一堆招工信息，最后也不知道选哪个？',
+    '找工作翻招工信息翻到怀疑人生，有没有人跟我一样？',
+    '说实话，找工作最累的不是上班，是筛招工信息。',
+    '你们有没有觉得，找工作光是看信息就够累的了？',
+    '每次换工作，光翻招工信息就得花好几天，太烦了。',
+    '找工作的时候你们是不是也不知道从哪看起？信息太多了根本筛不过来。',
+    '我以前找工作就是一条条翻，翻到最后也不确定哪个靠谱。'
+  ],
+  pain_point: [
+    '自己翻招工信息翻到头疼，不知道哪个合适',
+    '招工信息太多了，看得眼花缭乱，根本筛不过来',
+    '每次找工作都要花好几天刷信息，效率太低了',
+    '看了一堆招工信息，最后也分不清哪个靠谱哪个不靠谱',
+    '想找个合适的工作，但不知道怎么筛条件',
+    '招工信息写得都差不多，根本看不出区别',
+    '翻了半天招工信息，发现大部分都不符合自己的要求',
+    '找工作最烦的就是自己一个个看，费时间还不见得能找到合适的'
+  ],
+  condition_examples: [
+    '推荐离我近一点的岗位',
+    '推荐长白班的工作',
+    '推荐不用穿防尘服的',
+    '推荐环境好一点的工作',
+    '推荐轻松一点的岗位',
+    '推荐工资差不多但活别太累的',
+    '推荐坐班多一点的',
+    '推荐工资五千以上的',
+    '推荐不用上夜班的',
+    '推荐包吃包住的',
+    '推荐离地铁近的',
+    '推荐不用站一天的',
+    '推荐双休的工作',
+    '推荐有空调的车间'
+  ],
+  product_capability: [
+    '跟AI说条件，它按你说的推荐岗位，不合适还能继续筛',
+    '直接跟AI说你想要什么样的工作，它帮你推荐，省掉自己翻的过程',
+    '说得越具体推荐越准，比如长白班、离家近这种都能说',
+    '推荐完不满意还能继续跟AI聊，让它重新推荐',
+    'AI按你说的条件推荐，不用自己一条条翻了',
+    '可以说得很具体，AI会按你的要求筛选岗位',
+    '跟AI说完条件，它马上推荐，还能继续缩小范围'
+  ],
+  personal_judgement: [
+    '省掉自己翻和筛的过程，确实比以前一条一条找要快',
+    '试了一下确实不用自己一条条翻了，方便不少',
+    '我觉得最方便的是可以说得很具体，它真的按我说的推荐',
+    '比我以前自己翻招工信息要省事多了',
+    '不用自己筛了，跟AI说条件就行，确实省时间',
+    '推荐完还能继续聊，不用重新搜，这点挺好的',
+    '说条件让AI推荐，比自己翻要靠谱一些'
+  ],
+  title_pool: [
+    '闪电狗AI快聘真的能按我说的条件推荐岗位吗？我试了一下',
+    '闪电狗AI快聘体验：跟AI说想要什么工作，它真给我推了',
+    '闪电狗AI快聘跟AI说条件推荐岗位到底好不好用？实测',
+    '闪电狗AI快聘实测：说条件让AI推荐岗位',
+    '闪电狗AI快聘体验：跟AI说条件它帮你推荐岗位，不用自己翻了',
+    '找工作不用自己翻了？闪电狗AI快聘跟AI说条件它直接推荐',
+    '找工作最烦什么？闪电狗AI快聘跟AI说条件它直接推荐你们觉得怎么样',
+    '跟AI说找工作条件它能推荐合适的吗？闪电狗AI快聘实测',
+    '找工作翻信息翻到头疼？闪电狗AI快聘跟AI说条件就行',
+    '闪电狗AI快聘：跟AI说条件推荐岗位，我试了试效果怎么样',
+    '找工作不用自己筛了？闪电狗AI快聘AI按条件推荐',
+    '你们找工作一般怎么找的？评论区聊聊',
+    '找工作不用自己翻了？跟AI说条件它直接推荐'
+  ],
+  comment_question_pool: [
+    '你们找工作一般花多长时间才能找到合适的？',
+    '有没有人也试过这个小程序？感觉怎么样？',
+    '你们找工作最烦的是什么？评论区说说',
+    '有没有人试过直接跟AI说条件找工作的？',
+    '你们平时找工作花多长时间筛岗位？',
+    '你们觉得跟AI说条件找工作靠谱吗？',
+    '你们找工作一般怎么筛信息的？',
+    '有没有人跟我一样，翻招工信息翻到头疼的？'
+  ],
+  reply_pool: [
+    '我也是朋友推荐的，试了一下确实不用自己一条条翻了',
+    '跟AI说条件就行，它按你说的推荐，不合适还能继续筛',
+    '微信搜闪电狗AI快聘就能找到，是个小程序',
+    '我觉得最方便的是可以说得很具体，比如长白班、离家近这种',
+    '推荐完还能继续聊，不用重新搜',
+    '说得越具体推荐越准，可以试试',
+    '不用自己翻了，跟AI说条件就行',
+    '我试了一下，确实比自己筛要快',
+    '可以说很多条件，比如不用穿防尘服、坐班多一点这种',
+    '推荐完不满意可以继续说条件，它会重新推荐'
+  ]
+},
+// -------------------------------------------------------
+// POOL 2: 岗位真实_薪资真实
+// -------------------------------------------------------
+'岗位真实_薪资真实': {
+  hook: [
+    '找工作最怕什么？就怕写的工资跟实际不一样。',
+    '你们有没有碰到过，招工信息写得天花乱坠，去了完全不是那回事？',
+    '我以前找工作被坑过，说好的工资到手少了一大截。',
+    '找工作最怕的就是信息不真实，写一套做一套。',
+    '你们找工作有没有被骗过？我是真的被坑怕了。',
+    '招工信息写得好好的，去了才发现全变了，有没有人跟我一样？',
+    '找工作最烦的就是不知道招工信息靠不靠谱，看着都差不多。',
+    '说实话，找工作我现在第一件事就是看工资写得清不清楚。',
+    '你们有没有那种经历，面试的时候才发现跟招工信息写的完全不一样？',
+    '我以前找工作，去了才知道工资跟说好的差了快一半。'
+  ],
+  pain_point: [
+    '说好的工资到手少了一大截，各种扣',
+    '招工信息写得天花乱坠，去了完全不是那回事',
+    '写的月薪五千多，结果到手三千出头',
+    '岗位要求写得模模糊糊，去了才知道跟想的不一样',
+    '工资写个范围，到手永远是最低的那个数',
+    '说好的长白班，去了变成两班倒',
+    '招工信息上写包吃包住，结果宿舍挤得不行还要扣钱',
+    '面试的时候才发现，岗位跟招工信息写的完全不一样',
+    '工资写得不清不楚，问了也说不明白',
+    '去了才知道还有各种费用要扣，招工信息上根本没提'
+  ],
+  info_clarity: [
+    '每个岗位工资写得很明确，不是那种写个范围糊弄你的',
+    '工作内容、上班时间、地址都写得很清楚',
+    '还可以问AI更多细节，比如宿舍条件、要不要穿防尘服',
+    '岗位信息写得比较具体，不是那种模糊的',
+    '工资、要求、地址都有，不用自己猜',
+    '信息写得明明白白，至少不用猜',
+    '可以直接问AI岗位的细节，比如上班时间、宿舍条件这些',
+    '每个岗位的工资和要求都写得很具体'
+  ],
+  product_capability: [
+    '上面岗位信息写得比较真实，工资写得很明确',
+    '可以直接问AI岗位细节，宿舍条件、防尘服这些都能问',
+    '每个岗位工资、要求、地址都写得很清楚',
+    '信息写得明明白白，不用猜，还能问AI更多细节',
+    '岗位信息比较具体，不是那种写个范围糊弄你的'
+  ],
+  personal_judgement: [
+    '我不敢说每个岗位都完美，但至少信息写得明明白白，不用猜',
+    '至少信息写得比较具体，不是那种模糊的',
+    '我觉得信息透明最重要，至少不用猜',
+    '比那种写得模模糊糊的招工信息要靠谱一些',
+    '至少工资写得清清楚楚，不用到了才知道',
+    '信息写得明白，自己能判断，这点挺好的',
+    '我觉得最重要的是信息真实，不用到了才发现不一样'
+  ],
+  title_pool: [
+    '闪电狗AI快聘上的岗位工资是真的吗？我自己试了一下',
+    '闪电狗AI快聘体验：岗位信息写得到底怎么样',
+    '闪电狗AI快聘上的岗位工资是真的吗？我被坑过所以特别在意',
+    '被坑过之后我特别在意工资真不真，闪电狗AI快聘的信息靠谱吗',
+    '闪电狗AI快聘岗位信息实测：工资写得到底怎么样',
+    '闪电狗AI快聘上的岗位信息到底真不真？我来测试一下',
+    '闪电狗AI快聘的岗位信息写得怎么样？评论区聊聊',
+    '找工作最怕工资写一套做一套，这个小程序的信息靠谱吗',
+    '找工作最怕工资跟说好的不一样，闪电狗AI快聘的信息靠谱吗',
+    '招工信息写得清不清楚？闪电狗AI快聘我打开直接看',
+    '你们怎么判断招工信息靠不靠谱？闪电狗AI快聘上的信息你们觉得怎么样',
+    '找工作最怕被骗，你们一般怎么看招工信息的',
+    '被坑过的人都懂，找工作第一件事就是看工资写得真不真'
+  ],
+  comment_question_pool: [
+    '你们找工作有没有碰到过工资跟说好的不一样的？',
+    '你们一般怎么判断一个招工信息靠不靠谱？',
+    '你们找工作有没有被坑过？评论区说说',
+    '你们觉得招工信息最重要的是什么？',
+    '你们碰到过信息不真实的情况吗？',
+    '你们找工作最怕什么？评论区说说',
+    '你们怎么判断一个岗位靠不靠谱？',
+    '有没有人跟我一样，被坑过之后特别在意工资真不真？'
+  ],
+  reply_pool: [
+    '我也被坑过，现在看招工信息第一件事就是看工资写得清不清楚',
+    '这个小程序上面岗位信息写得比较具体，不是那种模糊的',
+    '微信搜闪电狗AI快聘就能找到',
+    '可以直接问AI岗位的细节，比如宿舍条件、上班时间这些',
+    '我觉得信息透明最重要，至少不用猜',
+    '工资写得很明确，不是那种写个范围的',
+    '至少信息写得明明白白，自己能判断',
+    '我也是被坑怕了，现在特别在意这个',
+    '上面每个岗位工资、要求、地址都有，比较清楚',
+    '还能问AI更多细节，比如要不要穿防尘服这种'
+  ]
+},
+// -------------------------------------------------------
+// POOL 3: 选好岗位后几秒约面_全流程2到3分钟
+// -------------------------------------------------------
+'选好岗位后几秒约面_全流程2到3分钟': {
+  hook: [
+    '找工作流程太长太烦了，光约个面试就折腾好几天。',
+    '你们找工作从开始到约上面试一般要多久？我以前折腾好几天。',
+    '找工作最烦的就是流程太长，看信息、筛岗位、约面试，一套下来好几天。',
+    '有没有人跟我一样，找工作最怕的就是流程太长太磨人？',
+    '每次找工作，光是约面试就得等好久，太折腾了。',
+    '找工作从看信息到约上面试，你们一般要多久？我以前至少好几天。',
+    '说实话，找工作最累的不是面试，是前面那一堆流程。',
+    '你们有没有觉得，找工作流程太长了？光筛信息就够烦的了。',
+    '找工作约面试还要打电话、等回复、跑来跑去，太折腾了。',
+    '每次换工作，光是约面试就折腾得够呛，有没有更快的办法？'
+  ],
+  pain_point: [
+    '光约个面试就折腾好几天，打电话、等回复、跑来跑去',
+    '找工作流程太长，看信息、筛岗位、约面试，一套下来好几天',
+    '以前找工作从开始到约上面试至少要好几天',
+    '约面试还要打电话等回复，效率太低了',
+    '找工作最烦的就是流程太长太磨人',
+    '每次换工作，光前面的流程就够累的了',
+    '看信息、筛岗位、联系、约面试，每一步都费时间',
+    '以前约面试要等好久，有时候等着等着岗位就没了'
+  ],
+  speed_expression: [
+    '选好岗位后，几秒就能约面试',
+    '从说条件到约好面试，全流程大概2、3分钟',
+    '选好岗位后约面试那一步是真的快，几秒就搞定了',
+    '全流程大概就2、3分钟，主要是AI推荐省了很多翻的时间',
+    '选好岗位后点约面试，几秒就约上了',
+    '从输入条件到约好面试，全流程大概2、3分钟就搞定了'
+  ],
+  challenge_tone: [
+    '我今天来试试，看看到底要多久',
+    '据说全流程大概2、3分钟就能搞定，我来看看是不是真的',
+    '我直接录屏给你们看，是不是真的',
+    '不吹不黑，直接给你们看',
+    '我来实测一下，看看到底有多快',
+    '今天来做个测试，看看是不是真的这么快'
+  ],
+  product_capability: [
+    '跟AI说条件，它推荐岗位，选好之后几秒就能约面试',
+    '从说条件到约好面试，全流程大概2、3分钟',
+    'AI按条件推荐岗位，选好之后点约面试几秒就搞定',
+    '说条件、AI推荐、选岗位、约面试，全流程大概2、3分钟',
+    '选好岗位后约面试那一步几秒就搞定了，全流程大概2、3分钟'
+  ],
+  personal_judgement: [
+    '我试的时候全流程确实就2、3分钟，主要是AI推荐省了很多翻的时间',
+    '选好岗位后约面试那一步是真的快，几秒就搞定了',
+    '比我以前找工作约面试要快多了',
+    '确实比以前折腾好几天要快，省了不少时间',
+    '全流程确实挺快的，主要是不用自己翻和筛了',
+    '约面试之前可以先看清楚岗位详情，不用盲约，这点挺好的',
+    '从说条件到约好面试确实就几分钟，没想到这么快'
+  ],
+  title_pool: [
+    '闪电狗AI快聘从说条件到约好面试要多久？我自己试了',
+    '闪电狗AI快聘从说条件到约好面试要多久？我录屏试了一下',
+    '闪电狗AI快聘体验：选好岗位后几秒就约上了面试',
+    '闪电狗AI快聘实测：选好岗位后几秒就能约面试',
+    '闪电狗AI快聘约面试有多快？以前被折腾怕了的我试了试',
+    '选好岗位后几秒就能约面试？闪电狗AI快聘实测',
+    '找工作全流程2、3分钟？闪电狗AI快聘我来试试是不是真的',
+    '找工作从开始到约上面试你们要多久？闪电狗AI快聘全流程大概2、3分钟',
+    '约面试不用再折腾了？闪电狗AI快聘选好岗位后几秒就搞定',
+    '找工作全流程2、3分钟？我来试试是不是真的',
+    '你们觉得找工作流程长不长？评论区聊聊',
+    '找工作约面试还要折腾好几天？试试这个小程序',
+    '闪电狗AI快聘全流程实测：从说条件到约好面试要多久'
+  ],
+  comment_question_pool: [
+    '你们找工作从开始到约上面试一般要多久？',
+    '有没有人觉得找工作最烦的就是流程太长？',
+    '你们以前约面试折腾过多久？',
+    '你们觉得找工作流程快重要吗？',
+    '你们觉得找工作流程长不长？',
+    '有没有人跟我一样，约面试折腾好几天的？',
+    '你们找工作最烦哪个环节？',
+    '你们觉得找工作最浪费时间的是什么？'
+  ],
+  reply_pool: [
+    '我试的时候全流程确实就2、3分钟，主要是AI推荐省了很多翻的时间',
+    '选好岗位后约面试那一步是真的快，几秒就搞定了',
+    '微信搜闪电狗AI快聘就能找到，是个小程序',
+    '关键是不用自己一条条翻，跟AI说条件它直接推荐',
+    '约面试之前可以先看清楚岗位详情，不用盲约',
+    '全流程确实挺快的，比以前折腾好几天强多了',
+    '选好岗位后点约面试几秒就搞定，不用打电话等回复',
+    '我也是被折腾怕了才试的，确实快不少',
+    '从说条件到约好面试大概就2、3分钟，自己试试就知道了',
+    '主要是AI推荐省了筛的时间，后面约面试也快'
+  ]
+}
+}; // end POOLS
+
+// ============================================================
+// SKELETON TEMPLATES — per video_type x shoot_mode
+// These define the STRUCTURE of the script, with {slots} for pool content
+// ============================================================
+var SKELETONS = {
+  '对镜口播_录屏补充': {
+    '真实试用型': [
+      '【开头】对着镜头说：\n"{hook}"',
+      '【过渡】\n"我前两天试了一个小程序，叫闪电狗AI快聘，{product_intro}。"',
+      '【展示操作-录屏】切到手机录屏画面：\n"你看，{demo_action}"',
+      '【展示结果-录屏】\n"{demo_result}"',
+      '【收尾】切回镜头：\n"{judgement}。你们也可以试试，微信搜闪电狗AI快聘就行。"'
+    ],
+    '避坑经历型': [
+      '【开头】对着镜头说：\n"{hook}我以前就碰到过，{pain_detail}。"',
+      '【过渡】\n"后来我就学乖了，{lesson}。最近有人跟我说闪电狗AI快聘上面的{product_intro}，我就去看了看。"',
+      '【展示-录屏】切到手机录屏：\n"你看，{demo_action}"',
+      '【继续展示-录屏】\n"{demo_result}"',
+      '【收尾】切回镜头：\n"{judgement}。你们要是也在意这个，可以微信搜闪电狗AI快聘自己看看。"'
+    ],
+    '效率挑战型': [
+      '【开头】对着镜头说：\n"{hook}今天来试试闪电狗AI快聘，{challenge}。"',
+      '【展示-录屏】切到录屏：\n"{demo_action}"',
+      '【结果-录屏】\n"{demo_result}"',
+      '【收尾】切回镜头：\n"{judgement}。微信搜闪电狗AI快聘试试。"'
+    ],
+    '经验提问型': [
+      '【开头】对着镜头说：\n"{hook}"',
+      '【过渡】\n"最近发现一个小程序叫闪电狗AI快聘，{product_intro}。"',
+      '【展示-录屏】切到录屏：\n"你看，{demo_action}"',
+      '【收尾】切回镜头：\n"你们觉得怎么样？评论区聊聊。微信搜闪电狗AI快聘试试。"'
+    ]
+  },
+  '纯录屏_配音': {
+    '真实试用型': [
+      '【开头-配音】\n"{hook}"',
+      '【操作-录屏配音】\n"我打开闪电狗AI快聘这个小程序，{demo_action}"',
+      '【结果-录屏配音】\n"{demo_result}"',
+      '【收尾-配音】\n"{judgement}。微信搜闪电狗AI快聘就能找到。"'
+    ],
+    '避坑经历型': [
+      '【开头-配音】\n"{hook}{pain_detail}。"',
+      '【操作-录屏配音】\n"我打开闪电狗AI快聘这个小程序，{demo_action}"',
+      '【继续-录屏配音】\n"{demo_result}"',
+      '【收尾-配音】\n"{judgement}。微信搜闪电狗AI快聘自己看看。"'
+    ],
+    '效率挑战型': [
+      '【开头-配音】\n"{hook}闪电狗AI快聘，{challenge}，我直接录屏。"',
+      '【操作-录屏配音】\n"{demo_action}"',
+      '【结果-录屏配音】\n"{demo_result}"',
+      '【收尾-配音】\n"{judgement}。微信搜闪电狗AI快聘。"'
+    ],
+    '经验提问型': [
+      '【开头-配音】\n"{hook}最近发现闪电狗AI快聘{product_intro}。"',
+      '【操作-录屏配音】\n"{demo_action}"',
+      '【收尾-配音】\n"你们觉得怎么样？评论区聊聊。微信搜闪电狗AI快聘。"'
+    ]
+  },
+  '环境画面_字幕配音': {
+    '真实试用型': [
+      '【画面1+字幕】拍生活场景\n字幕："{hook}"',
+      '【画面2+字幕】\n字幕："我试了闪电狗AI快聘这个小程序，{product_intro}。"',
+      '【画面3+字幕】拍手机操作\n字幕："{demo_action}"',
+      '【画面4+字幕】收尾\n字幕："{judgement}。微信搜闪电狗AI快聘。"'
+    ],
+    '避坑经历型': [
+      '【画面1+字幕】拍工厂门口或路上\n字幕："{hook}{pain_detail}。"',
+      '【画面2+字幕】拍生活场景\n字幕："闪电狗AI快聘上面{product_intro}。"',
+      '【画面3+字幕】拍手机操作画面\n字幕："{demo_action}"',
+      '【画面4+字幕】收尾\n字幕："{judgement}。微信搜闪电狗AI快聘。"'
+    ],
+    '效率挑战型': [
+      '【画面1+字幕】\n字幕："{hook}闪电狗AI快聘，{challenge}。"',
+      '【画面2+字幕】拍手机操作\n字幕："{demo_action}"',
+      '【画面3+字幕】\n字幕："{demo_result}"',
+      '【画面4+字幕】\n字幕："{judgement}。微信搜闪电狗AI快聘。"'
+    ],
+    '经验提问型': [
+      '【画面1+字幕】拍上班路上或宿舍\n字幕："{hook}"',
+      '【画面2+字幕】\n字幕："闪电狗AI快聘{product_intro}。"',
+      '【画面3+字幕】拍手机操作或生活画面\n字幕："{demo_action}"',
+      '【画面4+字幕】\n字幕："你们觉得怎么样？评论区聊聊。微信搜闪电狗AI快聘。"'
+    ]
+  },
+  '边拍边说': {
+    '真实试用型': [
+      '【边走边说】\n"{hook}"',
+      '【继续走+说】\n"我前两天试了闪电狗AI快聘这个小程序，{product_intro}。"',
+      '【停下来展示手机】\n"你看，{demo_action}"',
+      '【继续走+收尾】\n"{judgement}。微信搜闪电狗AI快聘就行。"'
+    ],
+    '避坑经历型': [
+      '【边走边说】\n"{hook}{pain_detail}。"',
+      '【继续走+说】\n"后来发现闪电狗AI快聘这个小程序，{product_intro}。"',
+      '【停下来展示手机】\n"你看，{demo_action}"',
+      '【继续走+收尾】\n"{judgement}。微信搜闪电狗AI快聘自己看看。"'
+    ],
+    '效率挑战型': [
+      '【边走边说】\n"{hook}闪电狗AI快聘，{challenge}。"',
+      '【展示手机】\n"{demo_action}"',
+      '【继续走+收尾】\n"{judgement}。微信搜闪电狗AI快聘试试。"'
+    ],
+    '经验提问型': [
+      '【边走边说】\n"{hook}"',
+      '【继续走+说】\n"最近发现闪电狗AI快聘，{product_intro}。"',
+      '【停下来展示手机】\n"{demo_action}"',
+      '【继续走+收尾】\n"你们觉得怎么样？评论区聊聊。微信搜闪电狗AI快聘。"'
+    ]
+  }
+};
+
+// ============================================================
+// DEMO snippets per main_point — these fill {demo_action} and {demo_result}
+// ============================================================
+var DEMO_SNIPPETS = {
+  'AI按条件推荐岗位': {
+    product_intro: [
+      '可以直接跟AI说你想找什么样的工作，它帮你推荐',
+      '说可以跟AI说条件让它推荐岗位',
+      '可以直接跟AI说条件，它按你说的推荐岗位'
+    ],
+    demo_action: [
+      '我就跟它说：{cond1}、{cond2}。',
+      '我跟它说：{cond1}、{cond2}。它马上就推荐了好几个岗位。',
+      '我说了几个条件，比如{cond1}、{cond2}，它马上推荐了。'
+    ],
+    demo_result: [
+      '它马上就给我推了几个岗位，工资、地址、要求都写得很清楚。我还可以继续跟它说，比如{cond3}，它又重新推荐了。',
+      '推荐了好几个岗位，信息都写得很清楚。不满意还能继续说条件，比如{cond3}，它会重新推荐。',
+      '它按我说的推荐了好几个，我又说了{cond3}，它又重新筛了一遍。说得越具体推荐越准。'
+    ],
+    lesson: [
+      '看招工信息第一件事就是看合不合自己的条件',
+      '找工作最重要的是找到符合自己条件的',
+      '现在找工作我就想省事，别让我自己一条条翻'
+    ]
+  },
+  '岗位真实_薪资真实': {
+    product_intro: [
+      '岗位信息比较真实',
+      '上面的岗位信息写得比较清楚',
+      '岗位和工资信息写得比较具体'
+    ],
+    demo_action: [
+      '每个岗位工资写得很明确，不是那种写个范围糊弄你的。工作内容、上班时间、地址都有，我还可以问AI更多细节。',
+      '你看，工资写得很明确，工作内容、时间、地址都有。我还问了AI宿舍条件，它也能告诉我。',
+      '随便点几个岗位看看，工资写得很清楚，岗位要求也很具体。还能问AI更多细节。'
+    ],
+    demo_result: [
+      '比如我问它这个岗位要不要穿防尘服、宿舍什么条件，它都能告诉我。',
+      '我问了上班时间、宿舍条件、有没有空调，AI都能回答。',
+      '问了几个细节，比如要不要穿防尘服、几点下班，AI都说得很清楚。'
+    ],
+    lesson: [
+      '看招工信息第一件事就是看工资写得清不清楚、岗位要求是不是具体的',
+      '现在看招工信息我就看一件事：写得清不清楚',
+      '找工作我现在第一件事就是看信息真不真实'
+    ]
+  },
+  '选好岗位后几秒约面_全流程2到3分钟': {
+    product_intro: [
+      '据说全流程大概2、3分钟就能搞定',
+      '说是从说条件到约好面试全流程大概2、3分钟',
+      '全流程大概2、3分钟'
+    ],
+    demo_action: [
+      '我跟AI说条件，它推荐了几个岗位，我选了一个看详情。',
+      '我说了几个条件，AI推荐了好几个岗位，我挑了一个看看详情。',
+      '跟AI说条件，它推荐了岗位，我选一个看详情。'
+    ],
+    demo_result: [
+      '工资、地址、要求都写得很清楚。我就选这个了，点约面试——你看，选好岗位后几秒就约上了。',
+      '点约面试——选好岗位后几秒就约上了。整个从说条件到约好面试，大概就2、3分钟。',
+      '岗位信息都写得很清楚，点约面试，几秒就约上了。从说条件到约好面试，整个大概2、3分钟。'
+    ],
+    lesson: [
+      '现在找工作我就在意一件事：流程快不快，别浪费时间',
+      '找工作我现在最在意的就是效率，别折腾太久',
+      '以前约面试折腾好几天，现在就想找个快的'
+    ],
+    challenge: [
+      '看看从说条件到约好面试到底要多久',
+      '我来试试从说条件到约好面试到底有多快',
+      '看看全流程到底要多久，是不是真的2、3分钟',
+      '我来实测一下，从说条件到约好面试要多久'
+    ]
+  }
+};
+
+// ============================================================
+// SUMMARY templates per video_type x main_point
+// ============================================================
+var SUMMARY_TEMPLATES = {
+  '真实试用型_岗位真实_薪资真实': '拍一条"我自己试了闪电狗AI快聘，看看上面岗位和工资是不是真的"的真实体验视频',
+  '真实试用型_AI按条件推荐岗位': '拍一条"我自己试了闪电狗AI快聘，跟AI说条件它直接给我推荐岗位"的真实体验视频',
+  '真实试用型_选好岗位后几秒约面_全流程2到3分钟': '拍一条"我自己试了闪电狗AI快聘，从说条件到约好面试有多快"的真实体验视频',
+  '避坑经历型_岗位真实_薪资真实': '拍一条"我以前找工作被坑过，现在用闪电狗AI快聘看岗位和工资是不是真的"的避坑经历视频',
+  '避坑经历型_AI按条件推荐岗位': '拍一条"我以前找工作被坑过，现在用闪电狗AI快聘跟AI说条件找工作"的避坑经历视频',
+  '避坑经历型_选好岗位后几秒约面_全流程2到3分钟': '拍一条"我以前找工作被坑过，现在用闪电狗AI快聘看约面试有多快"的避坑经历视频',
+  '效率挑战型_岗位真实_薪资真实': '拍一条"我来试试闪电狗AI快聘上面的岗位信息到底真不真"的挑战视频',
+  '效率挑战型_AI按条件推荐岗位': '拍一条"我来试试闪电狗AI快聘跟AI说条件推荐岗位到底好不好用"的挑战视频',
+  '效率挑战型_选好岗位后几秒约面_全流程2到3分钟': '拍一条"我来试试闪电狗AI快聘从说条件到约好面试到底要多久"的挑战视频',
+  '经验提问型_岗位真实_薪资真实': '拍一条"问大家怎么判断招工信息靠不靠谱，顺便聊聊闪电狗AI快聘"的讨论型视频',
+  '经验提问型_AI按条件推荐岗位': '拍一条"问大家找工作最烦什么，顺便聊聊闪电狗AI快聘跟AI说条件推荐岗位"的讨论型视频',
+  '经验提问型_选好岗位后几秒约面_全流程2到3分钟': '拍一条"问大家找工作流程长不长，顺便聊聊闪电狗AI快聘约面试有多快"的讨论型视频'
+};
+
+// ============================================================
+// SHOT templates per shoot_mode x main_point
+// ============================================================
+var SHOT_TEMPLATES = {
+  '对镜口播_录屏补充': {
+    '岗位真实_薪资真实': ['镜头1：对着镜头讲开头（表情自然）','镜头2：手机录屏——打开闪电狗AI快聘，浏览岗位列表','镜头3：手机录屏——点进岗位看详情（工资、要求、地址）','镜头4：手机录屏——跟AI问岗位细节','镜头5：切回镜头说收尾'],
+    'AI按条件推荐岗位': ['镜头1：对着镜头说开头（上半身，光线亮一点）','镜头2：手机录屏——打开闪电狗AI快聘小程序，输入条件','镜头3：手机录屏——AI推荐岗位列表，滑动查看','镜头4：手机录屏——继续跟AI说条件，缩小范围','镜头5：切回镜头，说收尾那段话'],
+    '选好岗位后几秒约面_全流程2到3分钟': ['镜头1：对着镜头说开头','镜头2：手机录屏——跟AI说条件，浏览推荐岗位','镜头3：手机录屏——选岗位看详情','镜头4：手机录屏——点击约面试，显示约面成功','镜头5：切回镜头说收尾']
+  },
+  '纯录屏_配音': {
+    '岗位真实_薪资真实': ['镜头1：录屏——打开闪电狗AI快聘小程序','镜头2：录屏——浏览岗位列表，点进岗位看详情','镜头3：录屏——跟AI问岗位细节','镜头4：录屏——收尾画面'],
+    'AI按条件推荐岗位': ['镜头1：录屏——打开闪电狗AI快聘小程序','镜头2：录屏——跟AI输入找工作条件','镜头3：录屏——AI推荐岗位列表，继续缩小范围','镜头4：录屏——收尾画面'],
+    '选好岗位后几秒约面_全流程2到3分钟': ['镜头1：录屏——打开闪电狗AI快聘小程序','镜头2：录屏——跟AI说条件，浏览推荐岗位','镜头3：录屏——选岗位看详情，点约面试，显示约面成功','镜头4：录屏——收尾画面']
+  },
+  '环境画面_字幕配音': {
+    '_default': ['镜头1：上班路上或宿舍走廊的画面（配字幕）','镜头2：手机操作或生活场景画面（配字幕）','镜头3：工厂门口或路上的画面（配字幕）','镜头4：收尾画面（配字幕引导评论区）']
+  },
+  '边拍边说': {
+    '_default': ['镜头1：边走边拍，说开头','镜头2：继续走，说过渡内容','镜头3：停下来展示手机画面','镜头4：继续走，说收尾']
+  }
+};
+
+function getShots(shoot_mode, main_point) {
+  var modeShots = SHOT_TEMPLATES[shoot_mode];
+  return (modeShots[main_point] || modeShots['_default'] || SHOT_TEMPLATES['对镜口播_录屏补充'][main_point]).slice();
+}
+
+// ============================================================
+// CORE: Assemble a task card from pools + skeletons
+// ============================================================
+function assembleCard(selections, prevHash) {
+  var vt = selections.video_type, mp = selections.main_point;
+  var sm = selections.shoot_mode, scm = selections.script_mode;
+  var pool = POOLS[mp];
+  var demo = DEMO_SNIPPETS[mp];
+  var comboKey = vt + '_' + mp;
+
+  // --- Pick random materials from pools ---
+  var hook = pickRandom(pool.hook);
+  var pain = pickRandom(pool.pain_point);
+  var conds = pickN(pool.condition_examples || [], 3);
+  var capability = pickRandom(pool.product_capability);
+  var judgement = pickRandom(pool.personal_judgement);
+  var prodIntro = pickRandom(demo.product_intro);
+  var demoAct = pickRandom(demo.demo_action);
+  var demoRes = pickRandom(demo.demo_result);
+  var lesson = pickRandom(demo.lesson || ['现在找工作我就特别在意这个']);
+  var challenge = demo.challenge ? pickRandom(demo.challenge) : '';
+  var infoClarity = pool.info_clarity ? pickRandom(pool.info_clarity) : '';
+  var speedExpr = pool.speed_expression ? pickRandom(pool.speed_expression) : '';
+
+  // Fill condition slots in demo strings
+  demoAct = demoAct.replace('{cond1}', conds[0]||'').replace('{cond2}', conds[1]||'').replace('{cond3}', conds[2]||'');
+  demoRes = demoRes.replace('{cond1}', conds[0]||'').replace('{cond2}', conds[1]||'').replace('{cond3}', conds[2]||'');
+
+  // For 岗位真实 pain_detail is from pain_point pool
+  var painDetail = pain;
+
+  // --- Ensure hook contains a pain word (for has_pain_point check) ---
+  var painWords = ['怕','坑','烦','被骗','吃过亏','折腾','头疼','不一样','少了','不知道','不靠谱'];
+  var hookHasPain = painWords.some(function(w){ return hook.indexOf(w) !== -1; });
+  if (!hookHasPain) {
+    // Try to find a hook with pain word
+    var painHooks = pool.hook.filter(function(h){ return painWords.some(function(w){ return h.indexOf(w) !== -1; }); });
+    if (painHooks.length > 0) hook = pickRandom(painHooks);
+    else hook = hook + '说实话挺烦的。'; // fallback: append pain word
+  }
+
+  // --- Build opening (3 sentences) ---
+  var opening;
+  if (vt === '真实试用型') {
+    opening = [hook, '我前两天试了一个叫闪电狗AI快聘的小程序，' + prodIntro + '。', judgement + '，今天给你们看看。'];
+  } else if (vt === '避坑经历型') {
+    opening = [hook, '后来我就特别在意这个。最近试了一个叫闪电狗AI快聘的小程序，给你们看看。', judgement + '。'];
+  } else if (vt === '效率挑战型') {
+    opening = [hook + '今天来试试闪电狗AI快聘，' + challenge + '。', '我直接给你们看，不吹不黑。', judgement + '。'];
+  } else { // 经验提问型
+    opening = [hook, '最近发现一个小程序叫闪电狗AI快聘，' + prodIntro + '，想听听你们觉得怎么样。', judgement + '。'];
+  }
+
+  // --- Build script from skeleton ---
+  var skeleton = SKELETONS[sm] && SKELETONS[sm][vt];
+  if (!skeleton) skeleton = SKELETONS['对镜口播_录屏补充'][vt];
+  var script = skeleton.map(function(tpl) {
+    return tpl
+      .replace('{hook}', hook)
+      .replace('{pain_detail}', painDetail)
+      .replace('{lesson}', lesson)
+      .replace('{product_intro}', prodIntro)
+      .replace('{demo_action}', demoAct)
+      .replace('{demo_result}', demoRes)
+      .replace('{judgement}', judgement)
+      .replace('{challenge}', challenge)
+      .replace('{capability}', capability)
+      .replace('{cond1}', conds[0]||'').replace('{cond2}', conds[1]||'').replace('{cond3}', conds[2]||'');
+  });
+
+  // Convert to outline if needed
+  if (scm === '提纲版') {
+    script = toOutlineScript(script);
+  }
+
+  // --- Post-check: ensure brand in first 3 script items ---
+  var brandName = '闪电狗AI快聘';
+  var earlyHasBrand = script.slice(0, 3).join('').indexOf(brandName) !== -1;
+  if (!earlyHasBrand && script.length > 1) {
+    script[1] = script[1] + '（闪电狗AI快聘小程序）';
+  }
+
+  // --- Pick titles (3, first must have brand, at least 2 with brand) ---
+  var brandTitles = pool.title_pool.filter(function(t){ return t.indexOf('闪电狗AI快聘') !== -1; });
+  var nonBrandTitles = pool.title_pool.filter(function(t){ return t.indexOf('闪电狗AI快聘') === -1; });
+  var t1 = pickRandom(brandTitles);
+  var t2 = pickRandomExcluding(brandTitles, t1);
+  var t3 = nonBrandTitles.length > 0 ? pickRandom(nonBrandTitles) : pickRandomExcluding(brandTitles, t1);
+  var titles = [t1, t2, t3];
+
+  // --- Pick comment questions (2) ---
+  var comment_questions = pickN(pool.comment_question_pool, 2);
+
+  // --- Pick replies (5) ---
+  var comment_replies = pickN(pool.reply_pool, 5);
+
+  // --- Shots ---
+  var shots = getShots(sm, mp);
+
+  // --- Summary ---
+  var summary = SUMMARY_TEMPLATES[comboKey] || '拍一条关于闪电狗AI快聘的视频';
+
+  var card = {
+    video_type: vt, main_point: mp, shoot_mode: sm, script_mode: scm,
+    summary: summary, opening: opening, script: script, titles: titles,
+    shots: shots, comment_questions: comment_questions, comment_replies: comment_replies
+  };
+  card.self_check = runSelfCheck(card);
+
+  // --- Anti-repeat: if hash matches previous, force re-roll key slots ---
+  if (prevHash && hashCard(card) === prevHash) {
+    card.opening[0] = pickRandomExcluding(pool.hook, hook);
+    card.titles[0] = pickRandomExcluding(brandTitles, t1);
+    card.comment_questions = pickN(pool.comment_question_pool, 2, comment_questions);
+    card.self_check = runSelfCheck(card);
+  }
+
+  return card;
+}
+
+// ============================================================
+// Outline converter (preserves brand)
+// ============================================================
+function toOutlineScript(detailedScript) {
+  var brand = '闪电狗AI快聘';
+  var result = detailedScript.map(function(line) {
+    var tagMatch = line.match(/^【([^】]+)】/);
+    var tag = tagMatch ? tagMatch[1] : '';
+    var cleaned = line
+      .replace(/^【[^】]+】[^\n]*\n?/, '')
+      .replace(/^"/, '').replace(/"$/, '')
+      .replace(/\n/g, ' ')
+      .trim();
+    var sentences = cleaned.split(/(?<=[。！？"])\s*/);
+    var kept = sentences.slice(0, 2).join('');
+    return '【' + tag + '】' + kept;
+  });
+  var joined = result.join('');
+  if (joined.indexOf(brand) === -1) {
+    var idx = result.length > 1 ? 1 : 0;
+    result[idx] = result[idx] + '（闪电狗AI快聘小程序）';
+  }
+  return result;
+}
+
+// ============================================================
+// BANNED WORDS + SELF CHECK (unchanged logic)
+// ============================================================
+var BANNED_WORDS = [
+  '鱼泡','BOSS直聘','boss直聘','Boss直聘','智联','前程无忧','58同城','58',
+  '吊打','秒杀','比某某平台好','不像某些平台','比中介强太多','不是某某那种',
+  '最牛','闭眼冲','全网最好','保证','一定','所有人都','任何岗位都'
+];
+
+function checkBannedWords(text) {
+  for (var i = 0; i < BANNED_WORDS.length; i++) {
+    if (text.indexOf(BANNED_WORDS[i]) !== -1) return { passed: false, word: BANNED_WORDS[i] };
+  }
+  return { passed: true };
+}
+
+function runSelfCheck(card) {
+  var allText = [card.summary].concat(card.opening, card.script, card.titles, card.comment_questions, card.comment_replies).join('\n');
+  var scriptText = card.script.join('\n');
+  var brandName = '闪电狗AI快聘';
+  var brand_name_included = allText.indexOf(brandName) !== -1;
+  var brand_in_script = scriptText.indexOf(brandName) !== -1;
+  var brand_in_visual = scriptText.indexOf(brandName) !== -1;
+  var brand_in_titles_count = card.titles.filter(function(t){ return t.indexOf(brandName) !== -1; }).length;
+  var default_title_has_brand = card.titles[0].indexOf(brandName) !== -1;
+  var earlyScript = card.script.slice(0, 3).join('\n');
+  var brand_early_in_script = earlyScript.indexOf(brandName) !== -1;
+  var openingText = card.opening.join('\n');
+  var painWords = ['怕','坑','烦','被骗','吃过亏','折腾','头疼','不一样','少了','不知道','不靠谱'];
+  var has_pain_point = painWords.some(function(w){ return openingText.indexOf(w) !== -1; });
+  var has_one_main_point_only = true;
+  var has_personal_judgement = true;
+  var has_comment_question = card.comment_questions.length >= 2;
+  var bannedCheck = checkBannedWords(allText);
+  var banned_words_passed = bannedCheck.passed;
+  var no_app_wording = allText.indexOf('APP') === -1 && allText.indexOf('app') === -1;
+  var competitors = ['鱼泡','BOSS直聘','boss直聘','Boss直聘','智联','前程无忧','58同城'];
+  var banned_competitor_passed = !competitors.some(function(w){ return allText.indexOf(w) !== -1; });
+  var product_capability_accuracy_passed = allText.indexOf('帮问厂') === -1 && allText.indexOf('帮我对接') === -1 && allText.indexOf('帮我联系好') === -1;
+  var overclaimWords = ['最牛','闭眼冲','全网最好','保证','一定','所有人都','任何岗位都'];
+  var no_overclaim_passed = !overclaimWords.some(function(w){ return allText.indexOf(w) !== -1; });
+  var no_fabricated_long_term_experience_passed = allText.indexOf('用了好几个月') === -1 && allText.indexOf('用了半年') === -1 && allText.indexOf('一直在用') === -1;
+  var interview_speed_overclaim_passed = !(allText.indexOf('几秒') !== -1 && allText.indexOf('找到工作') !== -1);
+  var interview_speed_accuracy_passed = true;
+  var interview_step_speed_passed = !allText.match(/几秒.{0,6}(找岗|找工作|推荐|全流程)/);
+  var full_flow_speed_passed = !allText.match(/2.{0,2}3分钟.{0,6}(约面试|约面)/);
+
+  var checks = {
+    brand_name_included: brand_name_included,
+    brand_in_script: brand_in_script,
+    brand_in_visual: brand_in_visual,
+    brand_in_titles_count: brand_in_titles_count,
+    default_title_has_brand: default_title_has_brand,
+    brand_early_in_script: brand_early_in_script,
+    has_pain_point: has_pain_point,
+    has_one_main_point_only: has_one_main_point_only,
+    has_personal_judgement: has_personal_judgement,
+    has_comment_question: has_comment_question,
+    banned_words_passed: banned_words_passed,
+    no_app_wording: no_app_wording,
+    banned_competitor_passed: banned_competitor_passed,
+    product_capability_accuracy_passed: product_capability_accuracy_passed,
+    no_overclaim_passed: no_overclaim_passed,
+    no_fabricated_long_term_experience_passed: no_fabricated_long_term_experience_passed,
+    interview_speed_overclaim_passed: interview_speed_overclaim_passed,
+    interview_speed_accuracy_passed: interview_speed_accuracy_passed,
+    interview_step_speed_passed: interview_step_speed_passed,
+    full_flow_speed_passed: full_flow_speed_passed
+  };
+  checks.pass = Object.entries(checks).every(function(entry) {
+    if (entry[0] === 'brand_in_titles_count') return entry[1] >= 2;
+    return entry[1] === true;
+  });
+  return checks;
+}
+
+// ============================================================
+// PUBLIC API: generateTaskCard
+// ============================================================
+function generateTaskCard(selections, prevHash) {
+  return assembleCard(selections, prevHash);
+}
+
+// ============================================================
+// APP STATE & RENDERING
+// ============================================================
+var state = {
+  page: 'intro',
+  currentQ: 0,
+  answers: {},
+  card: null,
+  prevHash: null,
+  version: 0
+};
+
+var app = document.getElementById('app');
+
+function toast(msg) {
+  var el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(function(){ el.remove(); }, 1800);
+}
+
+function copyText(text, btnEl) {
+  try {
+    navigator.clipboard.writeText(text).then(function(){
+      if (btnEl) { btnEl.classList.add('copied'); btnEl.textContent = '已复制'; setTimeout(function(){ btnEl.classList.remove('copied'); btnEl.textContent = '复制'; }, 1500); }
+      toast('已复制到剪贴板');
+    });
+  } catch(e) {
+    var ta = document.createElement('textarea');
+    ta.value = text; ta.style.cssText = 'position:fixed;left:-9999px';
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+    toast('已复制');
+  }
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+
+var _copyStore = {};
+function storeCopy(key, text) { _copyStore[key] = text; }
+function doCopy(key, btnEl) { copyText(_copyStore[key] || '', btnEl); }
+
+// ============================================================
+// RENDER: Intro
+// ============================================================
+function renderIntro() {
+  app.innerHTML = '<div class="fade-in">' +
+    '<div class="header"><p class="sub" style="margin-bottom:4px">闪电狗AI快聘</p><h1>拍摄任务生成器</h1><p class="sub">KOC拍摄助手</p></div>' +
+    '<div class="card"><h2>这是什么？</h2>' +
+    '<p style="font-size:14px;color:#555;line-height:1.7;margin-bottom:16px">回答4个简单问题，帮你生成一份完整的拍摄任务卡。每次生成的内容都不一样，同样的选择也能产出多种不同版本。</p>' +
+    '<h3>你会得到：</h3><ul class="intro-list">' +
+    '<li><span class="num">1</span>这条视频拍什么（一句话说清楚）</li>' +
+    '<li><span class="num">2</span>开头怎么说（3句话）</li>' +
+    '<li><span class="num">3</span>正文脚本（提纲版或逐句版）</li>' +
+    '<li><span class="num">4</span>拍哪几个镜头</li>' +
+    '<li><span class="num">5</span>标题怎么写（3个备选）</li>' +
+    '<li><span class="num">6</span>评论区怎么互动</li>' +
+    '</ul></div>' +
+    '<button class="btn btn-primary" onclick="startQuiz()">开始选择</button>' +
+    '</div>';
+}
+
+// ============================================================
+// RENDER: Quiz
+// ============================================================
+function startQuiz() {
+  state.page = 'quiz'; state.currentQ = 0; state.answers = {}; state.version = 0; state.prevHash = null;
+  renderQuiz();
+}
+
+function renderQuiz() {
+  var q = QUESTIONS[state.currentQ];
+  var progress = (state.currentQ / QUESTIONS.length) * 100;
+  var selected = state.answers[q.key] || null;
+  var html = '<div class="fade-in"><div class="header" style="padding-bottom:16px"><p class="sub" style="margin-bottom:4px">闪电狗AI快聘</p><h1>拍摄任务生成器</h1></div><div class="card">';
+  html += '<div class="progress-bar"><div class="progress-fill" style="width:' + progress + '%"></div></div>';
+  html += '<div class="q-step">' + q.step + '</div>';
+  html += '<div class="q-title">' + q.title + '</div>';
+  q.options.forEach(function(opt) {
+    html += '<button class="option ' + (selected === opt.value ? 'selected' : '') + '" onclick="selectOption(\'' + q.key + '\', \'' + opt.value + '\')">';
+    html += '<div class="opt-label">' + opt.label + '</div><div class="opt-desc">' + opt.desc + '</div></button>';
+  });
+  html += '</div><div style="display:flex;gap:8px;margin-top:12px">';
+  if (state.currentQ > 0) html += '<button class="btn btn-ghost" style="flex:1" onclick="prevQuestion()">上一题</button>';
+  html += '<button class="btn btn-ghost" style="flex:1" onclick="renderIntro()">返回首页</button>';
+  html += '</div></div>';
+  app.innerHTML = html;
+}
+
+function selectOption(key, value) {
+  state.answers[key] = value;
+  setTimeout(function() {
+    if (state.currentQ < QUESTIONS.length - 1) { state.currentQ++; renderQuiz(); }
+    else {
+      state.version = 1;
+      state.card = generateTaskCard(state.answers, null);
+      state.prevHash = hashCard(state.card);
+      state.page = 'result';
+      renderResult();
+    }
+  }, 200);
+}
+
+function prevQuestion() { if (state.currentQ > 0) { state.currentQ--; renderQuiz(); } }
+
+// ============================================================
+// RENDER: Result page
+// ============================================================
+function renderResult() {
+  var c = state.card;
+  var sc = c.self_check;
+
+  storeCopy('opening', c.opening.join('\n'));
+  storeCopy('script', c.script.join('\n\n'));
+  storeCopy('replies', c.comment_replies.join('\n'));
+  c.titles.forEach(function(t, i) { storeCopy('title_' + i, t); });
+
+  var checkLabels = {
+    brand_name_included: '品牌名出现', brand_in_script: '脚本含品牌', brand_in_visual: '画面含品牌',
+    brand_in_titles_count: '标题含品牌(' + sc.brand_in_titles_count + '/3)',
+    default_title_has_brand: '默认标题含品牌', brand_early_in_script: '品牌前置',
+    has_pain_point: '有痛点铺垫', has_one_main_point_only: '只讲1个卖点',
+    has_personal_judgement: '有个人视角', has_comment_question: '有评论区问题',
+    banned_words_passed: '无违禁词', no_app_wording: '无APP字样',
+    banned_competitor_passed: '无竞品提及', product_capability_accuracy_passed: '产品能力准确',
+    no_overclaim_passed: '无夸大承诺', no_fabricated_long_term_experience_passed: '无编造长期经历',
+    interview_speed_overclaim_passed: '速度无夸大', interview_speed_accuracy_passed: '速度表达准确',
+    interview_step_speed_passed: '约面步骤速度正确', full_flow_speed_passed: '全流程速度正确',
+    pass: '总检查'
+  };
+
+  function checkVal(key, val) {
+    if (key === 'brand_in_titles_count') return val >= 2;
+    return val === true;
+  }
+
+  var html = '<div class="fade-in">';
+  html += '<div class="header"><h1>你的拍摄任务卡 <span class="version-tag">第' + state.version + '版</span></h1><p class="sub">根据你的选择随机生成</p></div>';
+
+  // Tags
+  html += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px">';
+  html += '<span style="font-size:11px;padding:4px 8px;border-radius:6px;background:#fff3ed;color:#ff6b35">' + c.video_type + '</span>';
+  html += '<span style="font-size:11px;padding:4px 8px;border-radius:6px;background:#f0f7ff;color:#2563eb">' + c.main_point + '</span>';
+  html += '<span style="font-size:11px;padding:4px 8px;border-radius:6px;background:#f0fdf4;color:#166534">' + c.shoot_mode + '</span>';
+  html += '<span style="font-size:11px;padding:4px 8px;border-radius:6px;background:#faf5ff;color:#7c3aed">' + c.script_mode + '</span>';
+  html += '</div>';
+
+  // 1. Summary
+  html += '<div class="card"><div class="result-section">';
+  html += '<div class="section-label">这条视频拍什么</div>';
+  html += '<div class="section-content">' + c.summary + '</div>';
+  html += '</div></div>';
+
+  // 2. Opening
+  html += '<div class="card"><div class="result-section">';
+  html += '<div class="section-label">开头怎么说</div><div class="section-content">';
+  c.opening.forEach(function(s, i) { html += '<div style="margin-bottom:6px">' + (i+1) + '. ' + s + '</div>'; });
+  html += '</div><div class="btn-row"><button class="btn-sm" onclick="doCopy(\'opening\', this)">复制开头</button></div>';
+  html += '</div></div>';
+
+  // 3. Script
+  html += '<div class="card"><div class="result-section">';
+  html += '<div class="section-label">正文怎么讲（' + c.script_mode + '）</div><div class="section-content">';
+  c.script.forEach(function(s) {
+    html += '<div style="margin-bottom:12px;padding:10px;background:#fafafa;border-radius:10px;font-size:13px;line-height:1.7">' + escapeHtml(s) + '</div>';
+  });
+  html += '</div><div class="btn-row"><button class="btn-sm" onclick="doCopy(\'script\', this)">复制脚本</button></div>';
+  html += '</div></div>';
+
+  // 4. Shots
+  html += '<div class="card"><div class="result-section">';
+  html += '<div class="section-label">拍哪几个镜头</div><div class="section-content"><ul>';
+  c.shots.forEach(function(s) { html += '<li>' + s + '</li>'; });
+  html += '</ul></div></div></div>';
+
+  // 5. Titles
+  html += '<div class="card"><div class="result-section">';
+  html += '<div class="section-label">标题怎么写（3个备选）</div>';
+  c.titles.forEach(function(t, i) {
+    html += '<div class="title-item"><div class="title-text">';
+    if (i === 0) html += '<span class="title-tag">推荐</span> ';
+    html += t + '</div><button class="btn-sm" onclick="doCopy(\'title_' + i + '\', this)">复制</button></div>';
+  });
+  html += '</div></div>';
+
+  // 6. Comment questions
+  html += '<div class="card"><div class="result-section">';
+  html += '<div class="section-label">评论区问什么</div><div class="section-content">';
+  c.comment_questions.forEach(function(q, i) { html += '<div style="margin-bottom:6px">' + (i+1) + '. ' + q + '</div>'; });
+  html += '</div></div></div>';
+
+  // 7. Comment replies
+  html += '<div class="card"><div class="result-section">';
+  html += '<div class="section-label">别人问了怎么回</div><div class="section-content">';
+  c.comment_replies.forEach(function(r, i) { html += '<div style="margin-bottom:6px">' + (i+1) + '. ' + r + '</div>'; });
+  html += '</div><div class="btn-row"><button class="btn-sm" onclick="doCopy(\'replies\', this)">复制评论回复</button></div>';
+  html += '</div></div>';
+
+  // 8. Self check
+  html += '<div class="card"><div class="result-section">';
+  html += '<div class="section-label">自检结果 ';
+  html += sc.pass ? '<span style="color:#166534">全部通过</span>' : '<span style="color:#991b1b">有未通过项</span>';
+  html += '</div><div class="check-grid">';
+  Object.entries(sc).forEach(function(entry) {
+    var k = entry[0], v = entry[1];
+    if (k === 'pass') return;
+    var ok = checkVal(k, v);
+    var label = checkLabels[k] || k;
+    html += '<div class="check-item ' + (ok ? '' : 'fail') + '">' + (ok ? '&#10003;' : '&#10007;') + ' ' + label + '</div>';
+  });
+  html += '</div></div></div>';
+
+  // Bottom actions
+  html += '<div style="display:flex;flex-direction:column;gap:8px;margin-top:16px;padding-bottom:20px">';
+  html += '<div style="display:flex;gap:8px"><button class="btn btn-primary" style="flex:1" onclick="copyFullCard()">复制完整任务卡</button></div>';
+  html += '<div style="display:flex;gap:8px"><button class="btn btn-ghost" style="flex:1" onclick="regenerate()">换一版</button>';
+  html += '<button class="btn btn-ghost" style="flex:1" onclick="startQuiz()">返回重选</button></div>';
+  html += '<button class="btn btn-ghost" onclick="renderIntro()">返回首页</button>';
+  html += '</div></div>';
+
+  app.innerHTML = html;
+}
+
+// ============================================================
+// Copy full card + Regenerate
+// ============================================================
+function copyFullCard() {
+  var c = state.card;
+  var text = '【拍摄任务卡】第' + state.version + '版\n\n' +
+    '视频类型：' + c.video_type + '\n重点卖点：' + c.main_point + '\n拍摄方式：' + c.shoot_mode + '\n脚本模式：' + c.script_mode + '\n\n' +
+    '【这条视频拍什么】\n' + c.summary + '\n\n' +
+    '【开头怎么说】\n' + c.opening.map(function(s,i){return (i+1)+'. '+s;}).join('\n') + '\n\n' +
+    '【正文怎么讲（' + c.script_mode + '）】\n' + c.script.join('\n\n') + '\n\n' +
+    '【拍哪几个镜头】\n' + c.shots.map(function(s,i){return (i+1)+'. '+s;}).join('\n') + '\n\n' +
+    '【标题怎么写】\n' + c.titles.map(function(t,i){return (i+1)+'. '+(i===0?'(推荐) ':'')+t;}).join('\n') + '\n\n' +
+    '【评论区问什么】\n' + c.comment_questions.map(function(q,i){return (i+1)+'. '+q;}).join('\n') + '\n\n' +
+    '【别人问了怎么回】\n' + c.comment_replies.map(function(r,i){return (i+1)+'. '+r;}).join('\n');
+  copyText(text);
+}
+
+function regenerate() {
+  state.version++;
+  var prev = state.prevHash;
+  state.card = generateTaskCard(state.answers, prev);
+  state.prevHash = hashCard(state.card);
+  renderResult();
+  toast('已生成第' + state.version + '版');
+}
+
+// ============================================================
+// INIT
+// ============================================================
+renderIntro();
+
+</script>
+</body>
+</html>
