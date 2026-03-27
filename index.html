@@ -718,6 +718,64 @@ function formatThemeLine(shootMode, stage, content) {
   return (mode[stage] || '【正文】\n"') + content + '"';
 }
 
+var spoken_line_clean_rules = {
+  banned_patterns: [
+    /^再说/, /^最后说/, /^补一句/, /^收尾时/, /^这里说/, /^这里展示/, /^再讲/, /^先说/, /^然后说/,
+    /说下自己的感觉/, /说下自己的判断/, /再说自己觉得/, /最后补一句/, /^【/, /^镜头/
+  ]
+};
+
+var judgement_rewrite_pool = {
+  salary: [
+    '我自己看下来，至少工资和薪资构成都写得比较清楚。',
+    '我会更愿意先看这种把工资和薪资构成写明白的岗位。',
+    '比那种写得模模糊糊的招工信息，这样会更让人放心一点。',
+    '我看完职位详情页后，心里会更有数一点。'
+  ],
+  benefits: [
+    '我自己看下来，福利、宿舍和岗位特点这些写得还算明白。',
+    '我会更愿意先看这种把包吃住和宿舍情况写清楚的岗位。',
+    '至少不是只写几个空词，页面上能看到具体信息。',
+    '我看完这些福利标签以后，心里会更有底一点。'
+  ],
+  medical_fee: [
+    '我自己看下来，体检要求和体检费这块写得比较清楚。',
+    '我会更愿意先看这种把体检要求写明白的岗位。',
+    '至少先把这块看清楚，心里不会那么没底。',
+    '我看完职位详情页以后，会更知道自己该提前准备什么。'
+  ],
+  interview_info: [
+    '我自己看下来，面试和入职这块写得比较明白。',
+    '我会更愿意先看这种把面试要带什么写清楚的岗位。',
+    '至少先把这些流程看清楚，过去的时候心里更有数。',
+    '我看完职位详情页后，会更知道后面该怎么准备。'
+  ],
+  resignation: [
+    '我自己看下来，离职条件这块写出来会让人更放心一点。',
+    '我会更愿意先看这种把离职条件写明白的岗位。',
+    '这种信息先看清楚，后面心里会更有底一点。',
+    '我看完这一栏以后，会更清楚这个岗位适不适合自己。'
+  ],
+  info_clarity: [
+    '我自己看下来，工资、福利和要求这些信息写得算比较明白。',
+    '我会更愿意先看这种把关键信息都摆在页面上的岗位。',
+    '至少不是只给你一个岗位名，点开以后能看到具体内容。',
+    '我把几个页面都看完以后，心里会更有数一点。'
+  ],
+  ai_recommendation: [
+    '我自己看下来，先说条件再看推荐，这样找岗位会更省事一点。',
+    '对我来说，这种先说要求再推岗位的方式会更直接一点。',
+    '至少不用自己一个个翻，看起来会省不少时间。',
+    '我把推荐过程看完以后，会觉得这样找岗位更顺一点。'
+  ],
+  interview_speed: [
+    '我自己试下来，选好岗位后约面试这一步确实挺快。',
+    '对我来说，这种从推荐到约面试的流程会更顺一点。',
+    '至少关键步骤都能接着走，不用来回反复问。',
+    '我把这一套跑完以后，会觉得整个流程更省事一点。'
+  ]
+};
+
 var brand_anchor_rules = {
   brand_name: '闪电狗AI快聘小程序',
   capability_terms: ['AI推荐', '同城搜索', '职位详情页', '约面试', '消息通知', '岗位详情', '推荐岗位', '搜索页', 'AI对话推荐页']
@@ -783,7 +841,7 @@ function scriptMentionsCapability(text) {
 
 function checkBrandAnchorBeforeCapability(card) {
   var brandName = brand_anchor_rules.brand_name;
-  var scriptLines = (card.script_full || card.script || []).slice(1);
+  var scriptLines = (card.script_full || card.script || []).slice();
   var bodyText = scriptLines.join('\n');
   if (!scriptMentionsCapability(bodyText)) return true;
   var firstTwoBodyLines = scriptLines.slice(0, 2).join('\n');
@@ -793,25 +851,24 @@ function checkBrandAnchorBeforeCapability(card) {
 function buildThemeScript(theme, selections, context) {
   var pool = THEMED_SCRIPT_POOLS[theme];
   var lines = [
-    '【第一个镜头】真人露脸开头，先说你上面选的一句开头。',
-    formatThemeLine(selections.shoot_mode, 'intro', pickBridgeIntro(theme, context)),
-    formatThemeLine(selections.shoot_mode, 'detail', pickRandom(pool.detail)),
-    formatThemeLine(selections.shoot_mode, 'result', pickRandom(pool.result) + ' ' + context.judgement + '。')
+    pickBridgeIntro(theme, context),
+    pickRandom(pool.detail),
+    pickRandom(judgement_rewrite_pool[theme] || judgement_rewrite_pool.info_clarity)
   ];
   if (theme === 'ai_recommendation') {
-    lines.splice(2, 0, formatThemeLine(selections.shoot_mode, 'detail', '我在闪电狗AI快聘小程序里先跟AI说了条件：' + context.condText + '，它按我的要求推荐了几个岗位出来。'));
+    lines.splice(1, 0, '我在闪电狗AI快聘小程序里先跟AI说了条件：' + context.condText + '，它按我的要求推荐了几个岗位出来。');
   }
   if (theme === 'interview_speed') {
-    lines.splice(2, 0, formatThemeLine(selections.shoot_mode, 'detail', '我在闪电狗AI快聘小程序里先看推荐岗位，再点进职位详情页选中岗位，接着直接点约面试。'));
+    lines.splice(1, 0, '我在闪电狗AI快聘小程序里先看推荐岗位，再点进职位详情页选中岗位，接着直接点约面试。');
     if (context.includeMessageNotification) {
-      lines.splice(4, 0, formatThemeLine(selections.shoot_mode, 'detail', '约面成功后，我又在闪电狗AI快聘小程序里点开消息通知页看了一眼，里面能看到预约结果和提醒。'));
+      lines.splice(2, 0, '约面成功后，我又在闪电狗AI快聘小程序里点开消息通知页看了一眼，里面能看到预约结果和提醒。');
     }
   }
   if (theme === 'salary' && context.pageSource === '同城搜索页') {
-    lines[1] = formatThemeLine(selections.shoot_mode, 'intro', '我这次试了下闪电狗AI快聘小程序，不只看它推荐的岗位，我还切到同城搜索页去看了工资和标签。');
+    lines[0] = '我这次试了下闪电狗AI快聘小程序，不只看它推荐的岗位，我还切到同城搜索页去看了工资和标签。';
   }
   if (theme === 'benefits' && context.pageSource === '同城搜索页') {
-    lines[1] = formatThemeLine(selections.shoot_mode, 'intro', '我这次试了下闪电狗AI快聘小程序，不只看它推荐的岗位，我还切到同城搜索页去看福利标签、包吃住、可坐、可预支这些。');
+    lines[0] = '我这次试了下闪电狗AI快聘小程序，不只看它推荐的岗位，我还切到同城搜索页去看福利标签、包吃住、可坐、可预支这些。';
   }
   return lines;
 }
@@ -821,41 +878,41 @@ function buildThemeShots(theme, selections, context) {
   if (theme === 'salary') {
     shots.push('镜头2：录屏进入' + context.pageSource + '，先停留展示工资数字');
     shots.push('镜头3：继续停留展示薪资构成或工资相关信息');
-    shots.push('镜头4：切回真人露脸，说你看完工资后的判断');
+    shots.push('镜头4：切回真人露脸，停留收尾画面');
   } else if (theme === 'benefits') {
     shots.push('镜头2：录屏进入' + context.pageSource + '，展示福利标签或宿舍环境信息');
     shots.push('镜头3：继续展示包吃包住、可坐、可预支、岗位特点等内容');
-    shots.push('镜头4：切回真人露脸，说你看完这些信息后的判断');
+    shots.push('镜头4：切回真人露脸，停留收尾画面');
   } else if (theme === 'medical_fee') {
     shots.push('镜头2：录屏进入职位详情页，找到体检要求或体检费这一栏');
     shots.push('镜头3：继续停留展示体检查什么项目、要不要体检费');
-    shots.push('镜头4：切回真人露脸，说你对这块的判断');
+    shots.push('镜头4：切回真人露脸，停留收尾画面');
   } else if (theme === 'interview_info') {
     shots.push('镜头2：录屏进入职位详情页，找到面试与入职信息');
     shots.push('镜头3：继续展示面试要带什么、入职怎么安排');
-    shots.push('镜头4：切回真人露脸，说你看完后的判断');
+    shots.push('镜头4：切回真人露脸，停留收尾画面');
   } else if (theme === 'resignation') {
     shots.push('镜头2：录屏进入职位详情页，找到离职条件');
     shots.push('镜头3：停留展示离职条件这一栏');
-    shots.push('镜头4：切回真人露脸，说你为什么会特别看这块');
+    shots.push('镜头4：切回真人露脸，停留收尾画面');
   } else if (theme === 'info_clarity') {
     shots.push('镜头2：录屏进入职位详情页，展示工资、岗位要求或面试与入职信息');
     shots.push('镜头3：录屏切到同城搜索页，展示工资和福利标签');
-    shots.push('镜头4：切回真人露脸，说你看完这些页面后的判断');
+    shots.push('镜头4：切回真人露脸，停留收尾画面');
   } else if (theme === 'ai_recommendation') {
     shots.push('镜头2：录屏展示AI对话推荐页，输入条件：' + context.condText);
     shots.push('镜头3：展示AI推荐岗位列表，并继续缩小范围');
     shots.push('镜头4：点开一个职位详情页确认岗位信息');
-    shots.push('镜头5：切回真人露脸，说你觉得这种找法怎么样');
+    shots.push('镜头5：切回真人露脸，停留收尾画面');
   } else if (theme === 'interview_speed') {
     shots.push('镜头2：录屏展示AI对话推荐页，输入条件');
     shots.push('镜头3：展示推荐岗位列表并选中一个岗位');
     shots.push('镜头4：进入职位详情页后点击约面试，拍到约面成功');
     if (context.includeMessageNotification) {
       shots.push('镜头5：录屏进入消息通知页，展示约面结果或提醒');
-      shots.push('镜头6：切回真人露脸，说你对整个速度的判断');
+      shots.push('镜头6：切回真人露脸，停留收尾画面');
     } else {
-      shots.push('镜头5：切回真人露脸，说你对整个速度的判断');
+      shots.push('镜头5：切回真人露脸，停留收尾画面');
     }
   }
   return withShotDurations(shots);
@@ -1294,17 +1351,12 @@ function assembleCard(selections, prevHash) {
 // ============================================================
 function toOutlineScript(detailedScript) {
   var brand = '闪电狗AI快聘';
-  var result = detailedScript.map(function(line) {
-    var tagMatch = line.match(/^【([^】]+)】/);
-    var tag = tagMatch ? tagMatch[1] : '';
-    var cleaned = line
-      .replace(/^【[^】]+】[^\n]*\n?/, '')
-      .replace(/^"/, '').replace(/"$/, '')
-      .replace(/\n/g, ' ')
-      .trim();
-    var sentences = cleaned.split(/(?<=[。！？"])\s*/);
-    var kept = sentences.slice(0, 2).join('');
-    return '【' + tag + '】' + kept;
+  var labels = ['接着开头', '继续往下讲', '重点信息', '最后一句'];
+  var result = detailedScript.map(function(line, idx) {
+    var cleaned = String(line || '').replace(/\n/g, ' ').trim();
+    var sentences = cleaned.split(/(?<=[。！？])\s*/);
+    var kept = sentences.slice(0, 1).join('').trim();
+    return '【' + (labels[idx] || '正文') + '】' + kept;
   });
   var joined = result.join('');
   if (joined.indexOf(brand) === -1) {
@@ -1504,6 +1556,17 @@ function applyDouyinSafetyLayer(card) {
   return card;
 }
 
+function checkSpokenLineNatural(card) {
+  var scriptLines = card.script_full || card.script || [];
+  return scriptLines.every(function(line) {
+    var text = String(line || '').trim();
+    if (!text) return false;
+    return !spoken_line_clean_rules.banned_patterns.some(function(pattern) {
+      return pattern.test(text);
+    });
+  });
+}
+
 function runSelfCheck(card) {
   var allText = [card.summary].concat(card.opening, card.script, card.titles, card.comment_questions, card.comment_replies, card.shots).join('\n');
   var scriptText = card.script.join('\n');
@@ -1536,13 +1599,14 @@ function runSelfCheck(card) {
   var full_flow_speed_passed = !allText.match(/2.{0,2}3分钟.{0,6}(约面试|约面)/);
   var title_script_shot_consistency_passed = checkTitleScriptShotConsistency(card);
   var brand_anchor_before_capability_passed = checkBrandAnchorBeforeCapability(card);
+  var spoken_line_natural_passed = checkSpokenLineNatural(card);
   var page_consistency_passed = title_script_shot_consistency_passed;
   var variant_bypass_passed = !detectVariantBypass(allText);
   var soft_rewrite_passed = !SOFT_REWRITE_RULES.some(function(rule) {
     return textMatchesPatterns(allText, rule.patterns);
   });
   var banned_terms_passed = bannedCheck.passed;
-  var douyin_safety_passed = banned_terms_passed && soft_rewrite_passed && page_consistency_passed && variant_bypass_passed && brand_anchor_before_capability_passed;
+  var douyin_safety_passed = banned_terms_passed && soft_rewrite_passed && page_consistency_passed && variant_bypass_passed && brand_anchor_before_capability_passed && spoken_line_natural_passed;
 
   var checks = {
     brand_name_included: brand_name_included,
@@ -1567,6 +1631,7 @@ function runSelfCheck(card) {
     full_flow_speed_passed: full_flow_speed_passed,
     title_script_shot_consistency_passed: title_script_shot_consistency_passed,
     brand_anchor_before_capability_passed: brand_anchor_before_capability_passed,
+    spoken_line_natural_passed: spoken_line_natural_passed,
     banned_terms_passed: banned_terms_passed,
     soft_rewrite_passed: soft_rewrite_passed,
     page_consistency_passed: page_consistency_passed,
