@@ -1202,6 +1202,7 @@ function assembleCard(selections, prevHash) {
     theme_consistency_rules: theme_consistency_rules,
     page_alignment_rules: page_alignment_rules
   };
+  card = applyDouyinSafetyLayer(card);
   card.self_check = runSelfCheck(card);
 
   // --- Anti-repeat: if hash matches previous, force re-roll key slots ---
@@ -1224,6 +1225,7 @@ function assembleCard(selections, prevHash) {
       condText: condText,
       includeMessageNotification: includeMessageNotification
     });
+    card = applyDouyinSafetyLayer(card);
     card.self_check = runSelfCheck(card);
   }
 
@@ -1256,23 +1258,197 @@ function toOutlineScript(detailedScript) {
 }
 
 // ============================================================
-// BANNED WORDS + SELF CHECK (unchanged logic)
+// DOUYIN SAFE REWRITE + SELF CHECK
 // ============================================================
-var BANNED_WORDS = [
-  '鱼泡','BOSS直聘','boss直聘','Boss直聘','智联','前程无忧','58同城','58',
-  '吊打','秒杀','比某某平台好','不像某些平台','比中介强太多','不是某某那种',
-  '最牛','闭眼冲','全网最好','保证','一定','所有人都','任何岗位都'
+var STRICT_BANNED_PATTERNS = {
+  traffic: [
+    /微信/, /加v/, /加微/, /私聊我/, /扫码/, /拉群/, /主页找我/, /第三方平台/, /站外聊/, /私下交易/
+  ],
+  competitor: [
+    /鱼泡/, /boss直聘/, /智联/, /前程无忧/, /58同城/, /比某某平台好/, /不像某些平台/, /吊打/, /秒杀/
+  ],
+  absolute: [
+    /最牛/, /最好/, /全网第一/, /闭眼冲/, /保证/, /百分百/, /100%/, /包进/, /包过/, /稳过/, /谁用谁上岸/, /一定能/, /一定会/, /一定过/, /一定上/
+  ],
+  forced_interaction: [
+    /扣1/, /冲一波/, /必须评论/, /必须私信/, /点主页领取/, /评论区打1/, /想要的私我/
+  ]
+};
+
+var SOFT_REWRITE_RULES = [
+  {
+    name: 'income',
+    patterns: [/挣钱/, /赚钱/, /高薪/, /月入过万/, /钱多/, /工资高到离谱/, /挣麻了/],
+    replacement: '薪资信息'
+  },
+  {
+    name: 'speed',
+    patterns: [/秒约面/, /秒过/, /秒拿offer/, /几秒全搞定/],
+    replacement: '选好岗位后，约面试这一步很快'
+  },
+  {
+    name: 'fee',
+    patterns: [/不用交钱/, /一分钱不花/, /绝对没有体检费/, /没有任何费用/],
+    replacement: '体检费、面试材料这些页面上有写，具体以页面信息为准'
+  },
+  {
+    name: 'promise',
+    patterns: [/稳进/, /稳上/, /包安排/, /一定能约上/, /所有人都能约上/],
+    replacement: '选好岗位后可以继续约面试，具体看岗位和时间安排'
+  }
 ];
 
-function checkBannedWords(text) {
-  for (var i = 0; i < BANNED_WORDS.length; i++) {
-    if (text.indexOf(BANNED_WORDS[i]) !== -1) return { passed: false, word: BANNED_WORDS[i] };
+function normalizeForSafety(text) {
+  return String(text || '')
+    .toLowerCase()
+    .replace(/[！!@#￥$%^&*()（）_\-+=\[\]{}|\\:;"'“”‘’<>,.，。？?、\/`~·…\s]/g, '')
+    .replace(/微[xx]/g, '微信')
+    .replace(/v信/g, '微信')
+    .replace(/boss/g, 'boss')
+    .replace(/offer/g, 'offer');
+}
+
+function textMatchesPatterns(text, patterns) {
+  var raw = String(text || '');
+  var normalized = normalizeForSafety(raw);
+  for (var i = 0; i < patterns.length; i++) {
+    if (patterns[i].test(raw) || patterns[i].test(normalized)) return true;
+  }
+  return false;
+}
+
+function findStrictBannedTerm(text) {
+  var categories = Object.keys(STRICT_BANNED_PATTERNS);
+  for (var i = 0; i < categories.length; i++) {
+    var key = categories[i];
+    var patterns = STRICT_BANNED_PATTERNS[key];
+    for (var j = 0; j < patterns.length; j++) {
+      if (textMatchesPatterns(text, [patterns[j]])) {
+        return { passed: false, category: key, pattern: patterns[j].toString() };
+      }
+    }
+  }
+  if (/(^|[^0-9])58([^0-9]|$)/.test(String(text || ''))) {
+    return { passed: false, category: 'competitor', pattern: '/58/' };
   }
   return { passed: true };
 }
 
+function rewriteSoftSafetyText(text) {
+  var original = String(text || '');
+  var rewritten = original;
+  SOFT_REWRITE_RULES.forEach(function(rule) {
+    rule.patterns.forEach(function(pattern) {
+      rewritten = rewritten.replace(pattern, rule.replacement);
+    });
+  });
+  rewritten = rewritten
+    .replace(/几秒全流程/g, '从说条件到约好面试，全流程2、3分钟')
+    .replace(/几秒就搞定找工作/g, '选好岗位后，约面试这一步很快')
+    .replace(/工资高到离谱/g, '薪资写得比较明白')
+    .replace(/到手肯定没问题/g, '我会先看页面上写的薪资构成')
+    .replace(/绝对/g, '比较')
+    .replace(/肯定/g, '我这次看下来')
+    .replace(/最稳/g, '相对更想先看清楚')
+    .replace(/冲就完了/g, '我会先把页面信息看清楚')
+    .replace(/暴富/g, '薪资范围');
+  return {
+    text: rewritten,
+    changed: rewritten !== original
+  };
+}
+
+function rewriteStrictSafetyText(text) {
+  var original = String(text || '');
+  var rewritten = original;
+  rewritten = rewritten
+    .replace(/微信搜[^，。！？\n]*/g, '直接在对应页面里继续看')
+    .replace(/微信/g, '平台内')
+    .replace(/加v|加微|私聊我|扫码|拉群|主页找我|第三方平台|站外聊|私下交易/g, '留在页面里继续看')
+    .replace(/鱼泡|BOSS直聘|boss直聘|Boss直聘|智联|前程无忧|58同城/g, '别的平台')
+    .replace(/(^|[^0-9])58([^0-9]|$)/g, '$1别的平台$2')
+    .replace(/比某某平台好|不像某些平台|吊打|秒杀/g, '更想先把页面信息看清楚')
+    .replace(/最牛|最好|全网第一|闭眼冲|百分百|100%|包进|包过|稳过|谁用谁上岸/g, '更想先看清楚')
+    .replace(/保证/g, '我这次看下来')
+    .replace(/一定能|一定会|一定过|一定上/g, '这次看下来')
+    .replace(/扣1|冲一波|必须评论|必须私信|点主页领取|评论区打1|想要的私我/g, '你们也可以说说自己的看法');
+  return {
+    text: rewritten,
+    changed: rewritten !== original
+  };
+}
+
+function detectVariantBypass(text) {
+  var raw = String(text || '');
+  var normalized = normalizeForSafety(raw);
+  return /微.{0,2}信|保.{0,2}证|稳.{0,2}稳.{0,2}的|点.{0,2}主.{0,2}页|评.{0,2}论.{0,2}区.{0,2}打.{0,2}1/.test(raw) ||
+    /微信|保证|稳稳的|点主页|评论区打1/.test(normalized);
+}
+
+function assessRiskLevel(text) {
+  if (!text) return 'low';
+  if (!findStrictBannedTerm(text).passed) return 'high';
+  for (var i = 0; i < SOFT_REWRITE_RULES.length; i++) {
+    if (textMatchesPatterns(text, SOFT_REWRITE_RULES[i].patterns)) return 'medium';
+  }
+  return 'low';
+}
+
+function sanitizeContentList(list) {
+  var rewriteApplied = false;
+  var riskList = [];
+  var safeList = (list || []).map(function(item) {
+    var strictRewritten = rewriteStrictSafetyText(item);
+    var softRewritten = rewriteSoftSafetyText(strictRewritten.text);
+    rewriteApplied = rewriteApplied || strictRewritten.changed || softRewritten.changed;
+    riskList.push(assessRiskLevel(softRewritten.text));
+    return softRewritten.text;
+  });
+  return {
+    list: safeList,
+    risk: riskList,
+    rewriteApplied: rewriteApplied
+  };
+}
+
+function applyDouyinSafetyLayer(card) {
+  var titlesSafe = sanitizeContentList(card.titles);
+  var openingSafe = sanitizeContentList(card.opening);
+  var scriptFullSafe = sanitizeContentList(card.script_full || card.script);
+  var scriptSafe = sanitizeContentList(card.script);
+  var commentSafe = sanitizeContentList(card.comment_questions);
+  var replySafe = sanitizeContentList(card.comment_replies);
+  var shotsSafe = sanitizeContentList(card.shots);
+
+  card.titles = titlesSafe.list;
+  card.opening = openingSafe.list;
+  card.script_full = scriptFullSafe.list;
+  card.script = scriptSafe.list;
+  card.comment_questions = commentSafe.list;
+  card.comment_replies = replySafe.list;
+  card.shots = shotsSafe.list;
+  card.risk_level = {
+    titles: titlesSafe.risk,
+    opening: openingSafe.risk,
+    script: scriptSafe.risk,
+    script_full: scriptFullSafe.risk,
+    comment_questions: commentSafe.risk,
+    comment_replies: replySafe.risk,
+    shots: shotsSafe.risk
+  };
+  card.safe_rewrite_applied =
+    titlesSafe.rewriteApplied ||
+    openingSafe.rewriteApplied ||
+    scriptFullSafe.rewriteApplied ||
+    scriptSafe.rewriteApplied ||
+    commentSafe.rewriteApplied ||
+    replySafe.rewriteApplied ||
+    shotsSafe.rewriteApplied;
+  return card;
+}
+
 function runSelfCheck(card) {
-  var allText = [card.summary].concat(card.opening, card.script, card.titles, card.comment_questions, card.comment_replies).join('\n');
+  var allText = [card.summary].concat(card.opening, card.script, card.titles, card.comment_questions, card.comment_replies, card.shots).join('\n');
   var scriptText = card.script.join('\n');
   var brandName = '闪电狗AI快聘';
   var brand_name_included = allText.indexOf(brandName) !== -1;
@@ -1288,7 +1464,7 @@ function runSelfCheck(card) {
   var has_one_main_point_only = true;
   var has_personal_judgement = true;
   var has_comment_question = card.comment_questions.length >= 2;
-  var bannedCheck = checkBannedWords(allText);
+  var bannedCheck = findStrictBannedTerm(allText);
   var banned_words_passed = bannedCheck.passed;
   var no_app_wording = allText.indexOf('APP') === -1 && allText.indexOf('app') === -1;
   var competitors = ['鱼泡','BOSS直聘','boss直聘','Boss直聘','智联','前程无忧','58同城'];
@@ -1302,6 +1478,13 @@ function runSelfCheck(card) {
   var interview_step_speed_passed = !allText.match(/几秒.{0,6}(找岗|找工作|推荐|全流程)/);
   var full_flow_speed_passed = !allText.match(/2.{0,2}3分钟.{0,6}(约面试|约面)/);
   var title_script_shot_consistency_passed = checkTitleScriptShotConsistency(card);
+  var page_consistency_passed = title_script_shot_consistency_passed;
+  var variant_bypass_passed = !detectVariantBypass(allText);
+  var soft_rewrite_passed = !SOFT_REWRITE_RULES.some(function(rule) {
+    return textMatchesPatterns(allText, rule.patterns);
+  });
+  var banned_terms_passed = bannedCheck.passed;
+  var douyin_safety_passed = banned_terms_passed && soft_rewrite_passed && page_consistency_passed && variant_bypass_passed;
 
   var checks = {
     brand_name_included: brand_name_included,
@@ -1324,7 +1507,12 @@ function runSelfCheck(card) {
     interview_speed_accuracy_passed: interview_speed_accuracy_passed,
     interview_step_speed_passed: interview_step_speed_passed,
     full_flow_speed_passed: full_flow_speed_passed,
-    title_script_shot_consistency_passed: title_script_shot_consistency_passed
+    title_script_shot_consistency_passed: title_script_shot_consistency_passed,
+    banned_terms_passed: banned_terms_passed,
+    soft_rewrite_passed: soft_rewrite_passed,
+    page_consistency_passed: page_consistency_passed,
+    variant_bypass_passed: variant_bypass_passed,
+    douyin_safety_passed: douyin_safety_passed
   };
   checks.pass = Object.entries(checks).every(function(entry) {
     if (entry[0] === 'brand_in_titles_count') return entry[1] >= 2;
