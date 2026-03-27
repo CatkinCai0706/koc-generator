@@ -718,43 +718,100 @@ function formatThemeLine(shootMode, stage, content) {
   return (mode[stage] || '【正文】\n"') + content + '"';
 }
 
+var brand_anchor_rules = {
+  brand_name: '闪电狗AI快聘小程序',
+  capability_terms: ['AI推荐', '同城搜索', '职位详情页', '约面试', '消息通知', '岗位详情', '推荐岗位', '搜索页', 'AI对话推荐页']
+};
+
+var bridge_intro_pool = {
+  salary: [
+    '我这次试了下闪电狗AI快聘小程序，不只看它推荐的岗位，我还点开了{page}去看工资和标签。',
+    '我在闪电狗AI快聘小程序里先看了推荐岗位，又切到{page}看工资和薪资构成。',
+    '我这次专门打开闪电狗AI快聘小程序，先看推荐，再去{page}确认工资写得清不清楚。'
+  ],
+  benefits: [
+    '我这次试了下闪电狗AI快聘小程序，不只看推荐岗位，我还点开了{page}去看福利和宿舍信息。',
+    '我在闪电狗AI快聘小程序里先看了推荐，又去{page}看包吃住、宿舍和岗位特点。',
+    '我这次专门打开闪电狗AI快聘小程序，先看推荐岗位，再去{page}看福利标签这些。'
+  ],
+  medical_fee: [
+    '我这次试了下闪电狗AI快聘小程序，直接点开职位详情页去看体检要求和体检费。',
+    '我在闪电狗AI快聘小程序里先看了岗位，再去职位详情页确认体检这块写得清不清楚。',
+    '我这次专门打开闪电狗AI快聘小程序，重点看职位详情页里的体检要求。'
+  ],
+  interview_info: [
+    '我这次试了下闪电狗AI快聘小程序，直接点开职位详情页去看面试与入职信息。',
+    '我在闪电狗AI快聘小程序里先看了岗位，再去职位详情页确认面试要带什么。',
+    '我这次专门打开闪电狗AI快聘小程序，重点看职位详情页里的面试与入职信息。'
+  ],
+  resignation: [
+    '我这次试了下闪电狗AI快聘小程序，直接点开职位详情页去看离职条件。',
+    '我在闪电狗AI快聘小程序里先看了岗位，再去职位详情页确认离职条件这一栏。',
+    '我这次专门打开闪电狗AI快聘小程序，重点看职位详情页里的离职条件。'
+  ],
+  info_clarity: [
+    '我这次试了下闪电狗AI快聘小程序，不只看它推荐的岗位，我还去职位详情页和同城搜索页一起看。',
+    '我在闪电狗AI快聘小程序里先看了推荐岗位，又切到职位详情页和同城搜索页对着看。',
+    '我这次专门打开闪电狗AI快聘小程序，先看推荐，再去职位详情页和同城搜索页看信息写得细不细。'
+  ],
+  ai_recommendation: [
+    '我这次试了下闪电狗AI快聘小程序，先跟AI说了下要求。',
+    '我在闪电狗AI快聘小程序里先把条件说给AI听，再看它怎么推荐岗位。',
+    '我这次专门打开闪电狗AI快聘小程序，先试了下它按条件推荐岗位这一步。'
+  ],
+  interview_speed: [
+    '我这次试了下闪电狗AI快聘小程序，先看它推荐岗位，再看选好岗位后约面试这一步有多快。',
+    '我在闪电狗AI快聘小程序里先看了推荐岗位，再点进职位详情页试约面试。',
+    '我这次专门打开闪电狗AI快聘小程序，把推荐岗位、选岗位、约面试这一套跑了一遍。'
+  ]
+};
+
+function fillBridgeTemplate(text, context) {
+  return text.replace(/\{page\}/g, context.pageSource || '职位详情页');
+}
+
+function pickBridgeIntro(theme, context) {
+  var pool = bridge_intro_pool[theme] || bridge_intro_pool.info_clarity;
+  return fillBridgeTemplate(pickRandom(pool), context);
+}
+
+function scriptMentionsCapability(text) {
+  return brand_anchor_rules.capability_terms.some(function(term) {
+    return String(text || '').indexOf(term) !== -1;
+  });
+}
+
+function checkBrandAnchorBeforeCapability(card) {
+  var brandName = brand_anchor_rules.brand_name;
+  var scriptLines = (card.script_full || card.script || []).slice(1);
+  var bodyText = scriptLines.join('\n');
+  if (!scriptMentionsCapability(bodyText)) return true;
+  var firstTwoBodyLines = scriptLines.slice(0, 2).join('\n');
+  return firstTwoBodyLines.indexOf(brandName) !== -1;
+}
+
 function buildThemeScript(theme, selections, context) {
   var pool = THEMED_SCRIPT_POOLS[theme];
   var lines = [
     '【第一个镜头】真人露脸开头，先说你上面选的一句开头。',
-    formatThemeLine(selections.shoot_mode, 'intro', pickRandom(pool.opening)),
+    formatThemeLine(selections.shoot_mode, 'intro', pickBridgeIntro(theme, context)),
     formatThemeLine(selections.shoot_mode, 'detail', pickRandom(pool.detail)),
     formatThemeLine(selections.shoot_mode, 'result', pickRandom(pool.result) + ' ' + context.judgement + '。')
   ];
   if (theme === 'ai_recommendation') {
-    lines.splice(2, 0, formatThemeLine(selections.shoot_mode, 'detail', '我先在AI对话推荐页里说了条件：' + context.condText + '，它马上推荐了几个岗位出来。'));
+    lines.splice(2, 0, formatThemeLine(selections.shoot_mode, 'detail', '我在闪电狗AI快聘小程序里先跟AI说了条件：' + context.condText + '，它按我的要求推荐了几个岗位出来。'));
   }
   if (theme === 'interview_speed') {
-    lines.splice(2, 0, formatThemeLine(selections.shoot_mode, 'detail', '我先在AI对话推荐页说了条件，再点进职位详情页选中岗位，接着直接点约面试。'));
+    lines.splice(2, 0, formatThemeLine(selections.shoot_mode, 'detail', '我在闪电狗AI快聘小程序里先看推荐岗位，再点进职位详情页选中岗位，接着直接点约面试。'));
     if (context.includeMessageNotification) {
-      lines.splice(4, 0, formatThemeLine(selections.shoot_mode, 'detail', '约面成功后，我又去消息通知页看了一眼，里面能看到预约结果和提醒。'));
+      lines.splice(4, 0, formatThemeLine(selections.shoot_mode, 'detail', '约面成功后，我又在闪电狗AI快聘小程序里点开消息通知页看了一眼，里面能看到预约结果和提醒。'));
     }
   }
   if (theme === 'salary' && context.pageSource === '同城搜索页') {
-    lines[1] = formatThemeLine(selections.shoot_mode, 'intro', '我这次不只看AI推荐，我还切到同城搜索页去看工资和标签。');
-  }
-  if (theme === 'benefits') {
-    lines[1] = formatThemeLine(selections.shoot_mode, 'intro', '我这次直接点开' + context.pageSource + '，先看包吃住、宿舍、岗位特点这些。');
-  }
-  if (theme === 'medical_fee') {
-    lines[1] = formatThemeLine(selections.shoot_mode, 'intro', '我先点开职位详情页，专门看体检要求、体检费和体检查什么。');
-  }
-  if (theme === 'interview_info') {
-    lines[1] = formatThemeLine(selections.shoot_mode, 'intro', '我先点开职位详情页，专门看面试与入职信息。');
-  }
-  if (theme === 'resignation') {
-    lines[1] = formatThemeLine(selections.shoot_mode, 'intro', '我先点开职位详情页，专门看离职条件这一栏。');
-  }
-  if (theme === 'info_clarity') {
-    lines[1] = formatThemeLine(selections.shoot_mode, 'intro', '我会先看职位详情页，再切到同城搜索页，把工资、福利标签、面试与入职这些一起看。');
+    lines[1] = formatThemeLine(selections.shoot_mode, 'intro', '我这次试了下闪电狗AI快聘小程序，不只看它推荐的岗位，我还切到同城搜索页去看了工资和标签。');
   }
   if (theme === 'benefits' && context.pageSource === '同城搜索页') {
-    lines[1] = formatThemeLine(selections.shoot_mode, 'intro', '我这次重点看同城搜索页里的福利标签、包吃住、可坐、可预支这些。');
+    lines[1] = formatThemeLine(selections.shoot_mode, 'intro', '我这次试了下闪电狗AI快聘小程序，不只看它推荐的岗位，我还切到同城搜索页去看福利标签、包吃住、可坐、可预支这些。');
   }
   return lines;
 }
@@ -1478,13 +1535,14 @@ function runSelfCheck(card) {
   var interview_step_speed_passed = !allText.match(/几秒.{0,6}(找岗|找工作|推荐|全流程)/);
   var full_flow_speed_passed = !allText.match(/2.{0,2}3分钟.{0,6}(约面试|约面)/);
   var title_script_shot_consistency_passed = checkTitleScriptShotConsistency(card);
+  var brand_anchor_before_capability_passed = checkBrandAnchorBeforeCapability(card);
   var page_consistency_passed = title_script_shot_consistency_passed;
   var variant_bypass_passed = !detectVariantBypass(allText);
   var soft_rewrite_passed = !SOFT_REWRITE_RULES.some(function(rule) {
     return textMatchesPatterns(allText, rule.patterns);
   });
   var banned_terms_passed = bannedCheck.passed;
-  var douyin_safety_passed = banned_terms_passed && soft_rewrite_passed && page_consistency_passed && variant_bypass_passed;
+  var douyin_safety_passed = banned_terms_passed && soft_rewrite_passed && page_consistency_passed && variant_bypass_passed && brand_anchor_before_capability_passed;
 
   var checks = {
     brand_name_included: brand_name_included,
@@ -1508,6 +1566,7 @@ function runSelfCheck(card) {
     interview_step_speed_passed: interview_step_speed_passed,
     full_flow_speed_passed: full_flow_speed_passed,
     title_script_shot_consistency_passed: title_script_shot_consistency_passed,
+    brand_anchor_before_capability_passed: brand_anchor_before_capability_passed,
     banned_terms_passed: banned_terms_passed,
     soft_rewrite_passed: soft_rewrite_passed,
     page_consistency_passed: page_consistency_passed,
