@@ -725,6 +725,16 @@ var spoken_line_clean_rules = {
   ]
 };
 
+var front_view_clean_rules = {
+  banned_patterns: [
+    /如果这次视频讲/, /如果标题提到/, /如果正文提到/, /那正文和镜头都得/, /必须展示职位详情页/,
+    /这里要和标题一致/, /页面要对齐/, /这里要拍/, /这里要补品牌名/, /^再说/, /^最后说/, /^补一句/,
+    /^这里展示/, /^这里带一下/, /^收尾时/, /说自己的判断/, /给一个感受/, /表达一下靠不靠谱/, /带一下评论区问题/
+  ],
+  shot_only_patterns: [/^镜头/, /^录屏/, /^真人露脸开头/, /^停留展示/, /^切回真人露脸或页面收尾/, /^打开闪电狗AI快聘小程序/, /^进入消息通知页/],
+  spoken_only_patterns: [/我这次/, /我在闪电狗AI快聘小程序里/, /我自己看下来/, /我会更愿意/, /至少/, /对我来说/, /我看完/]
+};
+
 var judgement_rewrite_pool = {
   salary: [
     '我自己看下来，至少工资和薪资构成都写得比较清楚。',
@@ -867,6 +877,16 @@ function buildThemeScript(theme, selections, context) {
   if (theme === 'salary' && context.pageSource === '同城搜索页') {
     lines[0] = '我这次试了下闪电狗AI快聘小程序，不只看它推荐的岗位，我还切到同城搜索页去看了工资和标签。';
   }
+  if (theme === 'medical_fee') {
+    lines[0] = '我在闪电狗AI快聘小程序里先看了岗位，再去职位详情页确认体检要求和体检费这块写得清不清楚。';
+    lines[1] = '我点开职位详情页看了体检要求、体检费和体检查什么项目。';
+  }
+  if (theme === 'interview_info') {
+    lines[0] = '我在闪电狗AI快聘小程序里先看了岗位，再去职位详情页确认面试与入职信息。';
+  }
+  if (theme === 'resignation') {
+    lines[0] = '我在闪电狗AI快聘小程序里先看了岗位，再去职位详情页确认离职条件这一栏。';
+  }
   if (theme === 'benefits' && context.pageSource === '同城搜索页') {
     lines[0] = '我这次试了下闪电狗AI快聘小程序，不只看它推荐的岗位，我还切到同城搜索页去看福利标签、包吃住、可坐、可预支这些。';
   }
@@ -874,45 +894,45 @@ function buildThemeScript(theme, selections, context) {
 }
 
 function buildThemeShots(theme, selections, context) {
-  var shots = ['镜头1：真人露脸开头，先说你选中的开头句'];
+  var shots = ['镜头1：真人露脸开头'];
   if (theme === 'salary') {
     shots.push('镜头2：录屏进入' + context.pageSource + '，先停留展示工资数字');
     shots.push('镜头3：继续停留展示薪资构成或工资相关信息');
-    shots.push('镜头4：切回真人露脸，停留收尾画面');
+    shots.push('镜头4：切回真人露脸或页面收尾');
   } else if (theme === 'benefits') {
     shots.push('镜头2：录屏进入' + context.pageSource + '，展示福利标签或宿舍环境信息');
     shots.push('镜头3：继续展示包吃包住、可坐、可预支、岗位特点等内容');
-    shots.push('镜头4：切回真人露脸，停留收尾画面');
+    shots.push('镜头4：切回真人露脸或页面收尾');
   } else if (theme === 'medical_fee') {
     shots.push('镜头2：录屏进入职位详情页，找到体检要求或体检费这一栏');
     shots.push('镜头3：继续停留展示体检查什么项目、要不要体检费');
-    shots.push('镜头4：切回真人露脸，停留收尾画面');
+    shots.push('镜头4：切回真人露脸或页面收尾');
   } else if (theme === 'interview_info') {
     shots.push('镜头2：录屏进入职位详情页，找到面试与入职信息');
     shots.push('镜头3：继续展示面试要带什么、入职怎么安排');
-    shots.push('镜头4：切回真人露脸，停留收尾画面');
+    shots.push('镜头4：切回真人露脸或页面收尾');
   } else if (theme === 'resignation') {
     shots.push('镜头2：录屏进入职位详情页，找到离职条件');
     shots.push('镜头3：停留展示离职条件这一栏');
-    shots.push('镜头4：切回真人露脸，停留收尾画面');
+    shots.push('镜头4：切回真人露脸或页面收尾');
   } else if (theme === 'info_clarity') {
     shots.push('镜头2：录屏进入职位详情页，展示工资、岗位要求或面试与入职信息');
     shots.push('镜头3：录屏切到同城搜索页，展示工资和福利标签');
-    shots.push('镜头4：切回真人露脸，停留收尾画面');
+    shots.push('镜头4：切回真人露脸或页面收尾');
   } else if (theme === 'ai_recommendation') {
     shots.push('镜头2：录屏展示AI对话推荐页，输入条件：' + context.condText);
     shots.push('镜头3：展示AI推荐岗位列表，并继续缩小范围');
     shots.push('镜头4：点开一个职位详情页确认岗位信息');
-    shots.push('镜头5：切回真人露脸，停留收尾画面');
+    shots.push('镜头5：切回真人露脸或页面收尾');
   } else if (theme === 'interview_speed') {
     shots.push('镜头2：录屏展示AI对话推荐页，输入条件');
     shots.push('镜头3：展示推荐岗位列表并选中一个岗位');
     shots.push('镜头4：进入职位详情页后点击约面试，拍到约面成功');
     if (context.includeMessageNotification) {
       shots.push('镜头5：录屏进入消息通知页，展示约面结果或提醒');
-      shots.push('镜头6：切回真人露脸，停留收尾画面');
+      shots.push('镜头6：切回真人露脸或页面收尾');
     } else {
-      shots.push('镜头5：切回真人露脸，停留收尾画面');
+      shots.push('镜头5：切回真人露脸或页面收尾');
     }
   }
   return withShotDurations(shots);
@@ -1313,10 +1333,19 @@ function assembleCard(selections, prevHash) {
     theme: theme,
     page_source: pageSource,
     include_message_notification: includeMessageNotification,
-    theme_consistency_rules: theme_consistency_rules,
-    page_alignment_rules: page_alignment_rules
+    internal_rules: {
+      theme_consistency_rules: theme_consistency_rules,
+      page_alignment_rules: page_alignment_rules,
+      brand_anchor_rules: brand_anchor_rules,
+      douyin_safe_rules: {
+        strict_banned_patterns: STRICT_BANNED_PATTERNS,
+        soft_rewrite_rules: SOFT_REWRITE_RULES
+      },
+      front_view_clean_rules: front_view_clean_rules
+    }
   };
   card = applyDouyinSafetyLayer(card);
+  card.creator_task_view = buildCreatorTaskView(card);
   card.self_check = runSelfCheck(card);
 
   // --- Anti-repeat: if hash matches previous, force re-roll key slots ---
@@ -1340,6 +1369,7 @@ function assembleCard(selections, prevHash) {
       includeMessageNotification: includeMessageNotification
     });
     card = applyDouyinSafetyLayer(card);
+    card.creator_task_view = buildCreatorTaskView(card);
     card.self_check = runSelfCheck(card);
   }
 
@@ -1556,8 +1586,71 @@ function applyDouyinSafetyLayer(card) {
   return card;
 }
 
+function cleanFrontSpokenLine(text) {
+  var cleaned = String(text || '').trim();
+  cleaned = cleaned.replace(/^【[^】]+】/, '').trim();
+  cleaned = cleaned.replace(/^"|"$/g, '').trim();
+  return cleaned;
+}
+
+function cleanFrontShotLine(text) {
+  var cleaned = String(text || '').trim();
+  cleaned = cleaned.replace(/，先说你选中的开头句/g, '');
+  cleaned = cleaned.replace(/，停留收尾画面/g, '');
+  return cleaned;
+}
+
+function isFrontViewCleanText(text) {
+  var value = String(text || '').trim();
+  return !front_view_clean_rules.banned_patterns.some(function(pattern) {
+    return pattern.test(value);
+  });
+}
+
+function buildCreatorTaskView(card) {
+  var themeJudgements = judgement_rewrite_pool[card.theme] || judgement_rewrite_pool.info_clarity;
+  var spokenScript = (card.script || [])
+    .map(cleanFrontSpokenLine)
+    .filter(Boolean)
+    .filter(isFrontViewCleanText);
+  if (spokenScript.length < 2) {
+    spokenScript = spokenScript.concat(themeJudgements).filter(isFrontViewCleanText).slice(0, 3);
+  }
+  var view = {
+    summary: String(card.summary || '').trim(),
+    recommended_duration: String(card.recommended_duration || '').trim(),
+    opening: (card.opening || []).map(cleanFrontSpokenLine).filter(Boolean).filter(isFrontViewCleanText),
+    script: spokenScript,
+    shots: (card.shots || []).map(cleanFrontShotLine).filter(Boolean).filter(isFrontViewCleanText),
+    titles: (card.titles || []).map(function(text) { return String(text || '').trim(); }).filter(Boolean).filter(isFrontViewCleanText),
+    comment_questions: (card.comment_questions || []).map(function(text) { return String(text || '').trim(); }).filter(Boolean).filter(isFrontViewCleanText),
+    comment_replies: (card.comment_replies || []).map(function(text) { return String(text || '').trim(); }).filter(Boolean).filter(isFrontViewCleanText)
+  };
+  return view;
+}
+
+function checkFrontViewClean(card) {
+  var v = card.creator_task_view || buildCreatorTaskView(card);
+  var texts = [v.summary, v.recommended_duration]
+    .concat(v.opening, v.script, v.shots, v.titles, v.comment_questions, v.comment_replies);
+  return texts.every(isFrontViewCleanText);
+}
+
+function checkSpokenVsShotSeparation(card) {
+  var v = card.creator_task_view || buildCreatorTaskView(card);
+  var spokenOk = v.script.every(function(text) {
+    return isFrontViewCleanText(text) &&
+      !front_view_clean_rules.shot_only_patterns.some(function(pattern) { return pattern.test(text); });
+  });
+  var shotsOk = v.shots.every(function(text) {
+    return isFrontViewCleanText(text) &&
+      !front_view_clean_rules.spoken_only_patterns.some(function(pattern) { return pattern.test(text); });
+  });
+  return spokenOk && shotsOk;
+}
+
 function checkSpokenLineNatural(card) {
-  var scriptLines = card.script_full || card.script || [];
+  var scriptLines = (card.creator_task_view && card.creator_task_view.script) || card.script_full || card.script || [];
   return scriptLines.every(function(line) {
     var text = String(line || '').trim();
     if (!text) return false;
@@ -1568,8 +1661,9 @@ function checkSpokenLineNatural(card) {
 }
 
 function runSelfCheck(card) {
+  var front = card.creator_task_view || buildCreatorTaskView(card);
   var allText = [card.summary].concat(card.opening, card.script, card.titles, card.comment_questions, card.comment_replies, card.shots).join('\n');
-  var scriptText = card.script.join('\n');
+  var scriptText = (card.script_full || card.script).join('\n');
   var brandName = '闪电狗AI快聘';
   var brand_name_included = allText.indexOf(brandName) !== -1;
   var brand_in_script = scriptText.indexOf(brandName) !== -1;
@@ -1600,13 +1694,15 @@ function runSelfCheck(card) {
   var title_script_shot_consistency_passed = checkTitleScriptShotConsistency(card);
   var brand_anchor_before_capability_passed = checkBrandAnchorBeforeCapability(card);
   var spoken_line_natural_passed = checkSpokenLineNatural(card);
+  var front_view_clean_passed = checkFrontViewClean(card);
+  var spoken_vs_shot_separation_passed = checkSpokenVsShotSeparation(card);
   var page_consistency_passed = title_script_shot_consistency_passed;
   var variant_bypass_passed = !detectVariantBypass(allText);
   var soft_rewrite_passed = !SOFT_REWRITE_RULES.some(function(rule) {
     return textMatchesPatterns(allText, rule.patterns);
   });
   var banned_terms_passed = bannedCheck.passed;
-  var douyin_safety_passed = banned_terms_passed && soft_rewrite_passed && page_consistency_passed && variant_bypass_passed && brand_anchor_before_capability_passed && spoken_line_natural_passed;
+  var douyin_safety_passed = banned_terms_passed && soft_rewrite_passed && page_consistency_passed && variant_bypass_passed && brand_anchor_before_capability_passed && spoken_line_natural_passed && front_view_clean_passed && spoken_vs_shot_separation_passed;
 
   var checks = {
     brand_name_included: brand_name_included,
@@ -1632,6 +1728,8 @@ function runSelfCheck(card) {
     title_script_shot_consistency_passed: title_script_shot_consistency_passed,
     brand_anchor_before_capability_passed: brand_anchor_before_capability_passed,
     spoken_line_natural_passed: spoken_line_natural_passed,
+    front_view_clean_passed: front_view_clean_passed,
+    spoken_vs_shot_separation_passed: spoken_vs_shot_separation_passed,
     banned_terms_passed: banned_terms_passed,
     soft_rewrite_passed: soft_rewrite_passed,
     page_consistency_passed: page_consistency_passed,
@@ -1770,13 +1868,14 @@ function prevQuestion() { if (state.currentQ > 0) { state.currentQ--; renderQuiz
 // ============================================================
 function renderResult() {
   var c = state.card;
+  var v = c.creator_task_view || buildCreatorTaskView(c);
   var sc = c.self_check;
   if (typeof console !== 'undefined' && console.debug) console.debug('task_card_self_check', sc);
 
-  storeCopy('opening', c.opening.join('\n'));
-  storeCopy('script', c.script.join('\n\n'));
-  storeCopy('replies', c.comment_replies.join('\n'));
-  c.titles.forEach(function(t, i) { storeCopy('title_' + i, t); });
+  storeCopy('opening', v.opening.join('\n'));
+  storeCopy('script', v.script.join('\n\n'));
+  storeCopy('replies', v.comment_replies.join('\n'));
+  v.titles.forEach(function(t, i) { storeCopy('title_' + i, t); });
 
   var html = '<div class="fade-in">';
   html += '<div class="header"><h1>你的拍摄任务卡 <span class="version-tag">第' + state.version + '版</span></h1><p class="sub">根据你的选择随机生成</p></div>';
@@ -1792,20 +1891,20 @@ function renderResult() {
   // 1. Summary
   html += '<div class="card"><div class="result-section">';
   html += '<div class="section-label">这条视频拍什么</div>';
-  html += '<div class="section-content">' + c.summary + '</div>';
+  html += '<div class="section-content">' + v.summary + '</div>';
   html += '</div></div>';
 
   // 2. Recommended duration
   html += '<div class="card"><div class="result-section">';
   html += '<div class="section-label">建议时长</div>';
-  html += '<div class="section-content">' + c.recommended_duration + '</div>';
+  html += '<div class="section-content">' + v.recommended_duration + '</div>';
   html += '</div></div>';
 
   // 3. Opening
   html += '<div class="card"><div class="result-section">';
   html += '<div class="section-label">开头怎么说</div><div class="section-content">';
   html += '<div style="font-size:12px;color:#888;margin-bottom:8px">只用来拍前3秒，选一句最顺口的先说。</div>';
-  c.opening.forEach(function(s, i) { html += '<div style="margin-bottom:6px">' + (i+1) + '. ' + s + '</div>'; });
+  v.opening.forEach(function(s, i) { html += '<div style="margin-bottom:6px">' + (i+1) + '. ' + s + '</div>'; });
   html += '</div><div class="btn-row"><button class="btn-sm" onclick="doCopy(\'opening\', this)">复制开头</button></div>';
   html += '</div></div>';
 
@@ -1813,7 +1912,7 @@ function renderResult() {
   html += '<div class="card"><div class="result-section">';
   html += '<div style="font-size:12px;color:#888;margin-bottom:8px">从开头后面继续往下讲，不再重复第一句。</div>';
   html += '<div class="section-label">正文怎么讲（' + c.script_mode + '）</div><div class="section-content">';
-  c.script.forEach(function(s) {
+  v.script.forEach(function(s) {
     html += '<div style="margin-bottom:12px;padding:10px;background:#fafafa;border-radius:10px;font-size:13px;line-height:1.7">' + escapeHtml(s) + '</div>';
   });
   html += '</div><div class="btn-row"><button class="btn-sm" onclick="doCopy(\'script\', this)">复制脚本</button></div>';
@@ -1822,13 +1921,13 @@ function renderResult() {
   // 5. Shots
   html += '<div class="card"><div class="result-section">';
   html += '<div class="section-label">拍哪几个镜头</div><div class="section-content"><ul>';
-  c.shots.forEach(function(s) { html += '<li>' + s + '</li>'; });
+  v.shots.forEach(function(s) { html += '<li>' + s + '</li>'; });
   html += '</ul></div></div></div>';
 
   // 6. Titles
   html += '<div class="card"><div class="result-section">';
   html += '<div class="section-label">标题怎么写（3个备选）</div>';
-  c.titles.forEach(function(t, i) {
+  v.titles.forEach(function(t, i) {
     html += '<div class="title-item"><div class="title-text">';
     if (i === 0) html += '<span class="title-tag">推荐</span> ';
     html += t + '</div><button class="btn-sm" onclick="doCopy(\'title_' + i + '\', this)">复制</button></div>';
@@ -1838,13 +1937,13 @@ function renderResult() {
   // 7. Comment questions
   html += '<div class="card"><div class="result-section">';
   html += '<div class="section-label">评论区问什么</div><div class="section-content">';
-  c.comment_questions.forEach(function(q, i) { html += '<div style="margin-bottom:6px">' + (i+1) + '. ' + q + '</div>'; });
+  v.comment_questions.forEach(function(q, i) { html += '<div style="margin-bottom:6px">' + (i+1) + '. ' + q + '</div>'; });
   html += '</div></div></div>';
 
   // 8. Comment replies
   html += '<div class="card"><div class="result-section">';
   html += '<div class="section-label">别人问了怎么回</div><div class="section-content">';
-  c.comment_replies.forEach(function(r, i) { html += '<div style="margin-bottom:6px">' + (i+1) + '. ' + r + '</div>'; });
+  v.comment_replies.forEach(function(r, i) { html += '<div style="margin-bottom:6px">' + (i+1) + '. ' + r + '</div>'; });
   html += '</div><div class="btn-row"><button class="btn-sm" onclick="doCopy(\'replies\', this)">复制评论回复</button></div>';
   html += '</div></div>';
 
@@ -1864,15 +1963,16 @@ function renderResult() {
 // ============================================================
 function copyFullCard() {
   var c = state.card;
+  var v = c.creator_task_view || buildCreatorTaskView(c);
   var text = '【拍摄任务卡】第' + state.version + '版\n\n' +
-    '视频类型：' + c.video_type + '\n重点卖点：' + c.main_point + '\n拍摄方式：' + getOptionLabel('shoot_mode', c.shoot_mode) + '\n脚本模式：' + c.script_mode + '\n建议时长：' + c.recommended_duration + '\n\n' +
-    '【这条视频拍什么】\n' + c.summary + '\n\n' +
-    '【开头怎么说】\n' + c.opening.map(function(s,i){return (i+1)+'. '+s;}).join('\n') + '\n\n' +
-    '【正文怎么讲（' + c.script_mode + '）】\n' + c.script.join('\n\n') + '\n\n' +
-    '【拍哪几个镜头】\n' + c.shots.map(function(s,i){return (i+1)+'. '+s;}).join('\n') + '\n\n' +
-    '【标题怎么写】\n' + c.titles.map(function(t,i){return (i+1)+'. '+(i===0?'(推荐) ':'')+t;}).join('\n') + '\n\n' +
-    '【评论区问什么】\n' + c.comment_questions.map(function(q,i){return (i+1)+'. '+q;}).join('\n') + '\n\n' +
-    '【别人问了怎么回】\n' + c.comment_replies.map(function(r,i){return (i+1)+'. '+r;}).join('\n');
+    '视频类型：' + c.video_type + '\n重点卖点：' + c.main_point + '\n拍摄方式：' + getOptionLabel('shoot_mode', c.shoot_mode) + '\n脚本模式：' + c.script_mode + '\n建议时长：' + v.recommended_duration + '\n\n' +
+    '【这条视频拍什么】\n' + v.summary + '\n\n' +
+    '【开头怎么说】\n' + v.opening.map(function(s,i){return (i+1)+'. '+s;}).join('\n') + '\n\n' +
+    '【正文怎么讲（' + c.script_mode + '）】\n' + v.script.join('\n\n') + '\n\n' +
+    '【拍哪几个镜头】\n' + v.shots.map(function(s,i){return (i+1)+'. '+s;}).join('\n') + '\n\n' +
+    '【标题怎么写】\n' + v.titles.map(function(t,i){return (i+1)+'. '+(i===0?'(推荐) ':'')+t;}).join('\n') + '\n\n' +
+    '【评论区问什么】\n' + v.comment_questions.map(function(q,i){return (i+1)+'. '+q;}).join('\n') + '\n\n' +
+    '【别人问了怎么回】\n' + v.comment_replies.map(function(r,i){return (i+1)+'. '+r;}).join('\n');
   copyText(text);
 }
 
