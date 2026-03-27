@@ -437,6 +437,444 @@ var POOLS = {
 }
 }; // end POOLS
 
+var theme_consistency_rules = {
+  salary: '标题讲工资或薪资构成，正文和镜头必须出现职位详情页或同城搜索页里的工资信息。',
+  benefits: '标题讲福利、包吃住、宿舍、岗位特点，正文和镜头必须出现职位详情页或同城搜索页的对应信息。',
+  medical_fee: '标题讲体检费或体检要求，正文必须提职位详情页，镜头必须拍到体检要求或体检费。',
+  interview_info: '标题讲面试与入职，正文必须提职位详情页，镜头必须拍到面试与入职信息。',
+  resignation: '标题讲离职条件，正文必须提职位详情页，镜头必须拍到离职条件。',
+  info_clarity: '标题讲信息写得清不清楚，正文和镜头必须明确展示真实页面里的具体信息。',
+  ai_recommendation: '标题讲AI按条件推荐，正文和镜头必须体现说条件到推荐岗位的过程。',
+  interview_speed: '标题讲约面速度，正文和镜头必须体现推荐、选岗位、约面、约面成功的动作链路。'
+};
+
+var page_alignment_rules = {
+  salary: ['职位详情页', '同城搜索页'],
+  benefits: ['职位详情页', '同城搜索页'],
+  medical_fee: ['职位详情页'],
+  interview_info: ['职位详情页'],
+  resignation: ['职位详情页'],
+  info_clarity: ['职位详情页', '同城搜索页'],
+  ai_recommendation: ['AI对话推荐页', '职位详情页'],
+  interview_speed: ['AI对话推荐页', '职位详情页', '约面成功页', '消息通知页']
+};
+
+var THEMED_TITLE_POOLS = {
+  '岗位真实_薪资真实': {
+    salary: [
+      '闪电狗AI快聘上的工资写得清不清楚？我点开职位详情页看了',
+      '闪电狗AI快聘实测：职位详情页里的薪资构成写得明不明白',
+      '我直接看了闪电狗AI快聘职位详情页里的工资和薪资构成',
+      '同城搜索页里工资写得清不清楚？我在闪电狗AI快聘看了',
+      '找工作最怕工资写一套做一套，我点开闪电狗AI快聘看了工资',
+      '闪电狗AI快聘上的工资是真的吗？我没停在聊天页，直接点开详情看'
+    ],
+    benefits: [
+      '闪电狗AI快聘上的包吃包住和福利标签写得清不清楚？',
+      '我点开闪电狗AI快聘看了宿舍环境和岗位特点',
+      '同城搜索页里的包吃住、可坐、可预支这些我都看了',
+      '找工作最怕福利写不清，我在闪电狗AI快聘里直接看了',
+      '闪电狗AI快聘实测：宿舍环境和岗位特点是不是写得明白',
+      '包吃包住、宿舍、岗位特点这些，闪电狗AI快聘上写得怎么样'
+    ],
+    medical_fee: [
+      '闪电狗AI快聘上的体检要求和体检费写得清不清楚？',
+      '我专门点开职位详情页看了体检费和体检要求',
+      '找工作最怕体检费没说清，我在闪电狗AI快聘里看了',
+      '闪电狗AI快聘实测：职位详情页里会不会写体检费',
+      '体检查什么、要不要体检费，我在闪电狗AI快聘里直接看了',
+      '面试前最怕体检这块含糊，我点开闪电狗AI快聘看了详情页'
+    ],
+    interview_info: [
+      '闪电狗AI快聘上的面试与入职信息写得清不清楚？',
+      '我点开职位详情页看了面试要带什么、入职怎么走',
+      '找工作最怕面试信息说不清，我在闪电狗AI快聘里看了详情页',
+      '闪电狗AI快聘实测：职位详情页里的面试与入职信息怎么样',
+      '面试要带什么、怎么入职，我在闪电狗AI快聘上直接看了',
+      '我没只看推荐岗位，直接去看了闪电狗AI快聘里的面试与入职信息'
+    ],
+    resignation: [
+      '闪电狗AI快聘上的离职条件写得清不清楚？我点开详情页看了',
+      '我专门去看了闪电狗AI快聘职位详情页里的离职条件',
+      '找工作最怕前面不说离职条件，我在闪电狗AI快聘里看了',
+      '闪电狗AI快聘实测：职位详情页会不会写离职条件',
+      '离职条件这块写没写，我点开闪电狗AI快聘详情页看了',
+      '我最怕这种信息含糊，所以直接看了闪电狗AI快聘里的离职条件'
+    ],
+    info_clarity: [
+      '闪电狗AI快聘上的岗位信息到底写得清不清楚？我直接点开看了',
+      '我不只看推荐列表，直接去看了闪电狗AI快聘职位详情页',
+      '同城搜索页和职位详情页一起看，闪电狗AI快聘信息写得怎么样',
+      '找工作最怕信息含糊，我在闪电狗AI快聘里直接看页面了',
+      '闪电狗AI快聘实测：岗位信息、福利、体检这些写得到底细不细',
+      '我点开闪电狗AI快聘的职位详情页和同城搜索页看了一遍'
+    ]
+  },
+  'AI按条件推荐岗位': {
+    ai_recommendation: [
+      '闪电狗AI快聘真的能按我说的条件推荐岗位吗？我试了一下',
+      '我直接跟闪电狗AI快聘说条件，它怎么给我推荐岗位',
+      '找工作不用自己翻了？我试了闪电狗AI快聘的AI推荐',
+      '闪电狗AI快聘实测：说条件以后会怎么推岗位',
+      '我跟闪电狗AI快聘说了几个要求，它推荐得准不准',
+      '不想自己翻岗位了？我试了闪电狗AI快聘的对话推荐'
+    ]
+  },
+  '选好岗位后几秒约面_全流程2到3分钟': {
+    interview_speed: [
+      '闪电狗AI快聘从说条件到约好面试要多久？我自己试了',
+      '我录屏试了闪电狗AI快聘，从推荐岗位到约面试有多快',
+      '闪电狗AI快聘实测：选好岗位后几秒就能约面试？',
+      '找工作全流程2、3分钟？我把闪电狗AI快聘跑了一遍',
+      '我想看的是约面到底快不快，所以直接试了闪电狗AI快聘',
+      '从说条件到约面成功，我实测了闪电狗AI快聘这一整套'
+    ]
+  }
+};
+
+var THEMED_SCRIPT_POOLS = {
+  salary: {
+    opening: [
+      '我先让AI推荐几个岗位，然后我点开职位详情页，先看工资和薪资构成。',
+      '我不是只看聊天页，我又点进职位详情页看工资这块写得清不清楚。',
+      '我直接点开职位详情页，先把工资和薪资构成看明白。'
+    ],
+    detail: [
+      '职位详情页里工资怎么写、薪资构成怎么写，我先看了一遍。',
+      '我重点看了工资数字和薪资构成，至少不是只写一个很空的范围。',
+      '我还切到同城搜索页对着看了工资和标签，看看这块是不是写得明白。'
+    ],
+    result: [
+      '我这次就是冲着工资来的，所以会先把工资页面拍到再下判断。',
+      '如果标题讲工资，那镜头就得真拍到工资，这样说出来才有依据。',
+      '我看完工资和薪资构成，再说自己觉得靠不靠谱。'
+    ]
+  },
+  benefits: {
+    opening: [
+      '我先点开职位详情页，看宿舍环境、岗位特点这些写得怎么样。',
+      '我不是只看推荐列表，我又去看了同城搜索页里的福利标签。',
+      '我想看的就是包吃住、宿舍、岗位特点这些，所以我直接点开页面。'
+    ],
+    detail: [
+      '职位详情页里宿舍环境、岗位特点、面试与入职这些都能往下看。',
+      '同城搜索页里包吃包住、可坐、可预支、班制这些标签我都看了一遍。',
+      '我重点看的不是聊天页，是这些真实写在页面上的福利和基础信息。'
+    ],
+    result: [
+      '如果标题讲福利和宿舍，那镜头就得真拍到这些页面内容。',
+      '我看完这些标签和详情，再说自己觉得写得清不清楚。',
+      '至少不是嘴上说福利，我是真的点开页面看了。'
+    ]
+  },
+  medical_fee: {
+    opening: [
+      '我直接点开职位详情页，先看体检要求和要不要体检费。',
+      '我最怕这块写不清，所以我专门去看职位详情页里的体检信息。',
+      '我不是只看岗位名，我重点去看了职位详情页里的体检要求。'
+    ],
+    detail: [
+      '职位详情页里会写到体检要求、体检查什么、要不要体检费这些。',
+      '我把体检这块单独看了一遍，因为这类信息不能只靠猜。',
+      '如果这次视频讲体检费，那正文和镜头都得真拍到职位详情页。'
+    ],
+    result: [
+      '我看完体检这块，再说自己觉得写没写明白。',
+      '这类信息不拍页面就容易说空，所以我会把详情页拍到。',
+      '我这次判断的依据，就是职位详情页里的体检信息。'
+    ]
+  },
+  interview_info: {
+    opening: [
+      '我点开职位详情页，先看面试与入职信息写得清不清楚。',
+      '我最想确认的是面试要带什么、入职怎么走，所以我直接点详情页。',
+      '我不是只看岗位列表，我还去看了职位详情页里的面试与入职信息。'
+    ],
+    detail: [
+      '职位详情页里能继续看面试与入职信息，这块我单独停留看了一遍。',
+      '如果标题讲面试和入职，那镜头就得拍到职位详情页里的对应内容。',
+      '我重点看的是页面里写的面试与入职，不是只靠我自己感觉。'
+    ],
+    result: [
+      '我看完这些再说判断，至少不是空讲。',
+      '这块如果不点开详情页，其实很容易讲得没依据。',
+      '所以我这次会把面试与入职页内容拍出来再收尾。'
+    ]
+  },
+  resignation: {
+    opening: [
+      '我专门点开职位详情页，先看离职条件有没有写。',
+      '我比较在意这块，所以我去看了职位详情页里的离职条件。',
+      '这次我不只看推荐岗位，我重点看了离职条件。'
+    ],
+    detail: [
+      '职位详情页里如果写了离职条件，这块我会停下来拍清楚。',
+      '我会直接停留在职位详情页里的离职条件这一栏，不只停在聊天页。',
+      '我会把职位详情页里的离职条件拍到，再说自己的判断。'
+    ],
+    result: [
+      '这类信息不拍页面，很容易说空。',
+      '我看完离职条件，再决定自己怎么讲收尾。',
+      '所以这次视频的依据，就是职位详情页里的离职条件。'
+    ]
+  },
+  info_clarity: {
+    opening: [
+      '我这次不是只看AI推荐，我会点开职位详情页和同城搜索页一起看。',
+      '我想看的是这些信息到底写得清不清楚，所以我直接看页面。',
+      '我会分别看职位详情页和同城搜索页，不只停在聊天页。'
+    ],
+    detail: [
+      '职位详情页里有工资、岗位要求、面试与入职、体检这些信息。',
+      '同城搜索页里有工资、福利标签、包吃住、可坐、可预支这些。',
+      '我会把职位详情页和同城搜索页里的工资、福利标签、面试与入职这些都拍出来。'
+    ],
+    result: [
+      '我把页面看完，再说自己觉得哪块写得明白，哪块最值得看。',
+      '这类视频重点不是空讲，是把页面内容拍出来。',
+      '所以我这次会让正文和镜头都围着真实页面走。'
+    ]
+  },
+  ai_recommendation: {
+    opening: [
+      '我先直接跟AI说条件，看它会怎么推荐岗位。',
+      '我不想自己翻岗位，所以我直接跟AI说要求。',
+      '我这次重点看的是，说条件以后它推荐岗位这一步顺不顺。'
+    ],
+    detail: [
+      '我先说条件，它推了几个岗位出来，不满意我再继续缩小范围。',
+      '我会先拍AI对话推荐页，再拍推荐出来的岗位列表。',
+      '我选中一个岗位后，也会点开职位详情页确认这不是只停在聊天页。'
+    ],
+    result: [
+      '如果标题讲AI推荐，那镜头至少要把说条件到推荐岗位拍完整。',
+      '我这次重点就是把对话推荐过程拍清楚。',
+      '这样看的人才知道它到底是不是按条件在推岗位。'
+    ]
+  },
+  interview_speed: {
+    opening: [
+      '我这次直接实测，从说条件到约好面试到底要多久。',
+      '我重点不是空讲快，是把整套动作链路拍出来。',
+      '我要看的是推荐岗位、选岗位、约面，这一套到底顺不顺。'
+    ],
+    detail: [
+      '我会先拍AI推荐岗位，再拍我点开职位详情页选中岗位。',
+      '选好岗位后我直接点约面试，拍到约面成功这一步。',
+      '我会把推荐岗位、选岗位、约面成功这一整套动作拍出来。'
+    ],
+    result: [
+      '如果标题讲几秒约面，那镜头就必须把选中岗位和约面动作拍出来。',
+      '如果标题讲全流程2、3分钟，那也得把整条链路拍全。',
+      '我这次不是只讲快，而是把快发生在哪一步拍出来。'
+    ]
+  }
+};
+
+function flattenTitlePoolByTheme(pool) {
+  if (Array.isArray(pool)) return pool.slice();
+  return Object.keys(pool).reduce(function(acc, key) { return acc.concat(pool[key]); }, []);
+}
+
+function chooseTheme(mainPoint) {
+  if (mainPoint === 'AI按条件推荐岗位') return 'ai_recommendation';
+  if (mainPoint === '选好岗位后几秒约面_全流程2到3分钟') return 'interview_speed';
+  return pickRandom(['salary', 'benefits', 'medical_fee', 'interview_info', 'resignation', 'info_clarity']);
+}
+
+function pickPageSource(theme) {
+  if (theme === 'salary' || theme === 'benefits' || theme === 'info_clarity') {
+    return pickRandom(page_alignment_rules[theme]);
+  }
+  if (theme === 'ai_recommendation') return 'AI对话推荐页';
+  if (theme === 'interview_speed') return '职位详情页';
+  return '职位详情页';
+}
+
+function formatThemeLine(shootMode, stage, content) {
+  var prefixMap = {
+    '对镜口播_录屏补充': {
+      intro: '【接着开头往下讲】\n"',
+      detail: '【录屏展示页面】\n"',
+      result: '【切回镜头收尾】\n"'
+    },
+    '纯录屏_配音': {
+      intro: '【录屏配音-说明】\n"',
+      detail: '【录屏配音-展示页面】\n"',
+      result: '【录屏配音-收尾】\n"'
+    },
+    '环境画面_字幕配音': {
+      intro: '【画面+字幕】字幕："',
+      detail: '【手机录屏+字幕】字幕："',
+      result: '【收尾画面+字幕】字幕："'
+    },
+    '边拍边说': {
+      intro: '【继续边拍边说】\n"',
+      detail: '【停下来展示手机】\n"',
+      result: '【继续走着收尾】\n"'
+    }
+  };
+  var mode = prefixMap[shootMode] || prefixMap['对镜口播_录屏补充'];
+  return (mode[stage] || '【正文】\n"') + content + '"';
+}
+
+function buildThemeScript(theme, selections, context) {
+  var pool = THEMED_SCRIPT_POOLS[theme];
+  var lines = [
+    '【第一个镜头】真人露脸开头，先说你上面选的一句开头。',
+    formatThemeLine(selections.shoot_mode, 'intro', pickRandom(pool.opening)),
+    formatThemeLine(selections.shoot_mode, 'detail', pickRandom(pool.detail)),
+    formatThemeLine(selections.shoot_mode, 'result', pickRandom(pool.result) + ' ' + context.judgement + '。')
+  ];
+  if (theme === 'ai_recommendation') {
+    lines.splice(2, 0, formatThemeLine(selections.shoot_mode, 'detail', '我先在AI对话推荐页里说了条件：' + context.condText + '，它马上推荐了几个岗位出来。'));
+  }
+  if (theme === 'interview_speed') {
+    lines.splice(2, 0, formatThemeLine(selections.shoot_mode, 'detail', '我先在AI对话推荐页说了条件，再点进职位详情页选中岗位，接着直接点约面试。'));
+    if (context.includeMessageNotification) {
+      lines.splice(4, 0, formatThemeLine(selections.shoot_mode, 'detail', '约面成功后，我又去消息通知页看了一眼，里面能看到预约结果和提醒。'));
+    }
+  }
+  if (theme === 'salary' && context.pageSource === '同城搜索页') {
+    lines[1] = formatThemeLine(selections.shoot_mode, 'intro', '我这次不只看AI推荐，我还切到同城搜索页去看工资和标签。');
+  }
+  if (theme === 'benefits') {
+    lines[1] = formatThemeLine(selections.shoot_mode, 'intro', '我这次直接点开' + context.pageSource + '，先看包吃住、宿舍、岗位特点这些。');
+  }
+  if (theme === 'medical_fee') {
+    lines[1] = formatThemeLine(selections.shoot_mode, 'intro', '我先点开职位详情页，专门看体检要求、体检费和体检查什么。');
+  }
+  if (theme === 'interview_info') {
+    lines[1] = formatThemeLine(selections.shoot_mode, 'intro', '我先点开职位详情页，专门看面试与入职信息。');
+  }
+  if (theme === 'resignation') {
+    lines[1] = formatThemeLine(selections.shoot_mode, 'intro', '我先点开职位详情页，专门看离职条件这一栏。');
+  }
+  if (theme === 'info_clarity') {
+    lines[1] = formatThemeLine(selections.shoot_mode, 'intro', '我会先看职位详情页，再切到同城搜索页，把工资、福利标签、面试与入职这些一起看。');
+  }
+  if (theme === 'benefits' && context.pageSource === '同城搜索页') {
+    lines[1] = formatThemeLine(selections.shoot_mode, 'intro', '我这次重点看同城搜索页里的福利标签、包吃住、可坐、可预支这些。');
+  }
+  return lines;
+}
+
+function buildThemeShots(theme, selections, context) {
+  var shots = ['镜头1：真人露脸开头，先说你选中的开头句'];
+  if (theme === 'salary') {
+    shots.push('镜头2：录屏进入' + context.pageSource + '，先停留展示工资数字');
+    shots.push('镜头3：继续停留展示薪资构成或工资相关信息');
+    shots.push('镜头4：切回真人露脸，说你看完工资后的判断');
+  } else if (theme === 'benefits') {
+    shots.push('镜头2：录屏进入' + context.pageSource + '，展示福利标签或宿舍环境信息');
+    shots.push('镜头3：继续展示包吃包住、可坐、可预支、岗位特点等内容');
+    shots.push('镜头4：切回真人露脸，说你看完这些信息后的判断');
+  } else if (theme === 'medical_fee') {
+    shots.push('镜头2：录屏进入职位详情页，找到体检要求或体检费这一栏');
+    shots.push('镜头3：继续停留展示体检查什么项目、要不要体检费');
+    shots.push('镜头4：切回真人露脸，说你对这块的判断');
+  } else if (theme === 'interview_info') {
+    shots.push('镜头2：录屏进入职位详情页，找到面试与入职信息');
+    shots.push('镜头3：继续展示面试要带什么、入职怎么安排');
+    shots.push('镜头4：切回真人露脸，说你看完后的判断');
+  } else if (theme === 'resignation') {
+    shots.push('镜头2：录屏进入职位详情页，找到离职条件');
+    shots.push('镜头3：停留展示离职条件这一栏');
+    shots.push('镜头4：切回真人露脸，说你为什么会特别看这块');
+  } else if (theme === 'info_clarity') {
+    shots.push('镜头2：录屏进入职位详情页，展示工资、岗位要求或面试与入职信息');
+    shots.push('镜头3：录屏切到同城搜索页，展示工资和福利标签');
+    shots.push('镜头4：切回真人露脸，说你看完这些页面后的判断');
+  } else if (theme === 'ai_recommendation') {
+    shots.push('镜头2：录屏展示AI对话推荐页，输入条件：' + context.condText);
+    shots.push('镜头3：展示AI推荐岗位列表，并继续缩小范围');
+    shots.push('镜头4：点开一个职位详情页确认岗位信息');
+    shots.push('镜头5：切回真人露脸，说你觉得这种找法怎么样');
+  } else if (theme === 'interview_speed') {
+    shots.push('镜头2：录屏展示AI对话推荐页，输入条件');
+    shots.push('镜头3：展示推荐岗位列表并选中一个岗位');
+    shots.push('镜头4：进入职位详情页后点击约面试，拍到约面成功');
+    if (context.includeMessageNotification) {
+      shots.push('镜头5：录屏进入消息通知页，展示约面结果或提醒');
+      shots.push('镜头6：切回真人露脸，说你对整个速度的判断');
+    } else {
+      shots.push('镜头5：切回真人露脸，说你对整个速度的判断');
+    }
+  }
+  return withShotDurations(shots);
+}
+
+function checkTitleScriptShotConsistency(card) {
+  var titleText = (card.titles || []).join('\n');
+  var scriptText = (card.script_full || card.script || []).join('\n');
+  var shotText = (card.shots || []).join('\n');
+  var theme = card.theme || detectThemeFromTitle(titleText);
+  function hasAny(text, words) { return words.some(function(word) { return text.indexOf(word) !== -1; }); }
+  if (theme === 'salary') {
+    return hasAny(scriptText, ['职位详情页', '同城搜索页']) &&
+      hasAny(scriptText, ['工资', '薪资构成']) &&
+      hasAny(shotText, ['工资', '薪资构成']) &&
+      hasAny(shotText, ['职位详情页', '同城搜索页']);
+  }
+  if (theme === 'benefits' || theme === 'info_clarity') {
+    if (theme === 'info_clarity') {
+      return hasAny(scriptText, ['职位详情页', '同城搜索页']) &&
+        hasAny(scriptText, ['工资', '岗位要求', '面试与入职', '体检', '福利标签', '包吃住']) &&
+        hasAny(shotText, ['职位详情页', '同城搜索页']) &&
+        hasAny(shotText, ['工资', '福利标签', '岗位要求', '面试与入职', '包吃住']);
+    }
+    return hasAny(scriptText, ['职位详情页', '同城搜索页']) &&
+      hasAny(scriptText, ['福利', '包吃包住', '宿舍', '岗位特点', '可坐', '可预支']) &&
+      hasAny(shotText, ['福利', '包吃包住', '宿舍', '岗位特点', '可坐', '可预支']) &&
+      hasAny(shotText, ['职位详情页', '同城搜索页']);
+  }
+  if (theme === 'medical_fee') {
+    return hasAny(scriptText, ['职位详情页']) &&
+      hasAny(scriptText, ['体检费', '体检要求', '体检查什么']) &&
+      hasAny(shotText, ['体检费', '体检要求', '体检查什么']) &&
+      hasAny(shotText, ['职位详情页']);
+  }
+  if (theme === 'interview_info') {
+    return hasAny(scriptText, ['职位详情页']) &&
+      hasAny(scriptText, ['面试与入职', '面试', '入职']) &&
+      hasAny(shotText, ['面试', '入职']) &&
+      hasAny(shotText, ['职位详情页']);
+  }
+  if (theme === 'resignation') {
+    return hasAny(scriptText, ['职位详情页']) &&
+      hasAny(scriptText, ['离职条件']) &&
+      hasAny(shotText, ['离职条件']) &&
+      hasAny(shotText, ['职位详情页']);
+  }
+  if (theme === 'ai_recommendation') {
+    var aiBase = hasAny(scriptText, ['AI对话推荐页', '说了条件', '推荐岗位']) &&
+      hasAny(shotText, ['AI对话推荐页', '推荐岗位']);
+    var mentionsExtra = hasAny(scriptText, ['工资', '福利', '宿舍', '体检', '面试与入职', '离职条件']);
+    if (!mentionsExtra) return aiBase;
+    return aiBase && hasAny(shotText, ['职位详情页', '同城搜索页']);
+  }
+  if (theme === 'interview_speed') {
+    var speedBase = hasAny(scriptText, ['AI对话推荐页', '选中', '约面试', '约面成功']) &&
+      hasAny(shotText, ['AI对话推荐页', '选中', '约面试', '约面成功']);
+    if (hasAny(scriptText, ['消息通知页', '预约结果', '提醒', '状态'])) {
+      return speedBase && hasAny(shotText, ['消息通知页', '预约结果', '提醒']);
+    }
+    return speedBase;
+  }
+  return true;
+}
+
+function detectThemeFromTitle(title) {
+  if (/(工资|薪资)/.test(title)) return 'salary';
+  if (/(包吃包住|福利|宿舍|岗位特点|环境)/.test(title)) return 'benefits';
+  if (/(体检费|体检要求|体检查什么)/.test(title)) return 'medical_fee';
+  if (/(面试|入职)/.test(title)) return 'interview_info';
+  if (/(离职条件|离职)/.test(title)) return 'resignation';
+  if (/(条件推荐|AI.*推荐|不用自己翻岗位)/.test(title)) return 'ai_recommendation';
+  if (/(约面|2、3分钟|2-3分钟|几秒)/.test(title)) return 'interview_speed';
+  return 'info_clarity';
+}
+
 // ============================================================
 // SKELETON TEMPLATES — per video_type x shoot_mode
 // These define the STRUCTURE of the script, with {slots} for pool content
@@ -682,8 +1120,9 @@ function assembleCard(selections, prevHash) {
   var vt = selections.video_type, mp = selections.main_point;
   var sm = selections.shoot_mode, scm = selections.script_mode;
   var pool = POOLS[mp];
-  var demo = DEMO_SNIPPETS[mp];
   var comboKey = vt + '_' + mp;
+  var theme = chooseTheme(mp);
+  var themedTitles = (THEMED_TITLE_POOLS[mp] && THEMED_TITLE_POOLS[mp][theme]) || flattenTitlePoolByTheme(THEMED_TITLE_POOLS[mp] || {});
 
   // --- Pick random materials from pools ---
   var hook = pickRandom(pool.hook);
@@ -691,20 +1130,9 @@ function assembleCard(selections, prevHash) {
   var conds = pickN(pool.condition_examples || [], 3);
   var capability = pickRandom(pool.product_capability);
   var judgement = pickRandom(pool.personal_judgement);
-  var prodIntro = pickRandom(demo.product_intro);
-  var demoAct = pickRandom(demo.demo_action);
-  var demoRes = pickRandom(demo.demo_result);
-  var lesson = pickRandom(demo.lesson || ['现在找工作我就特别在意这个']);
-  var challenge = demo.challenge ? pickRandom(demo.challenge) : '';
-  var infoClarity = pool.info_clarity ? pickRandom(pool.info_clarity) : '';
-  var speedExpr = pool.speed_expression ? pickRandom(pool.speed_expression) : '';
-
-  // Fill condition slots in demo strings
-  demoAct = demoAct.replace('{cond1}', conds[0]||'').replace('{cond2}', conds[1]||'').replace('{cond3}', conds[2]||'');
-  demoRes = demoRes.replace('{cond1}', conds[0]||'').replace('{cond2}', conds[1]||'').replace('{cond3}', conds[2]||'');
-
-  // For 岗位真实 pain_detail is from pain_point pool
-  var painDetail = pain;
+  var pageSource = pickPageSource(theme);
+  var includeMessageNotification = theme === 'interview_speed' ? Math.random() > 0.5 : false;
+  var condText = conds.join('、');
 
   // --- Ensure hook contains a pain word (for has_pain_point check) ---
   var painWords = ['怕','坑','烦','被骗','吃过亏','折腾','头疼','不一样','少了','不知道','不靠谱'];
@@ -717,37 +1145,15 @@ function assembleCard(selections, prevHash) {
   }
 
   // --- Build opening hook options (3 candidates, only for first 1-2 lines) ---
+  var openingSource = pool.hook;
   var opening = [hook].concat(pickN(pool.hook, 2, [hook]));
-
-  // --- Build body script only (continues after opening) ---
-  var skeleton = SKELETONS[sm] && SKELETONS[sm][vt];
-  if (!skeleton) skeleton = SKELETONS['对镜口播_录屏补充'][vt];
-  var bodyLines = skeleton.slice(1);
-  if (vt === '真实试用型') {
-    bodyLines[0] = '【接着开头往下讲】\n"我前两天试了一个小程序，叫闪电狗AI快聘，' + prodIntro + '。"';
-  } else if (vt === '避坑经历型') {
-    bodyLines[0] = '【接着开头往下讲】\n"我以前就碰到过，' + painDetail + '。后来我就特别在意这个，所以去看了看闪电狗AI快聘。"';
-  } else if (vt === '效率挑战型') {
-    bodyLines[0] = '【接着开头往下讲】\n"今天我就直接试试闪电狗AI快聘，' + challenge + '。"';
-  } else {
-    bodyLines[0] = '【接着开头往下讲】\n"最近发现一个小程序叫闪电狗AI快聘，' + prodIntro + '，我想听听你们怎么想。"';
-  }
-  var script = bodyLines.map(function(tpl) {
-    return tpl
-      .replace('{hook}', hook)
-      .replace('{pain_detail}', painDetail)
-      .replace('{lesson}', lesson)
-      .replace('{product_intro}', prodIntro)
-      .replace('{demo_action}', demoAct)
-      .replace('{demo_result}', demoRes)
-      .replace('{judgement}', judgement)
-      .replace('{challenge}', challenge)
-      .replace('{capability}', capability)
-      .replace('{cond1}', conds[0]||'').replace('{cond2}', conds[1]||'').replace('{cond3}', conds[2]||'');
+  var script = buildThemeScript(theme, selections, {
+    judgement: judgement,
+    pageSource: pageSource,
+    condText: condText,
+    includeMessageNotification: includeMessageNotification
   });
-  script.unshift('【第一个镜头】真人露脸开头，先说你上面选的一句开头。');
-
-  // Convert to outline if needed
+  var scriptFull = script.slice();
   if (scm === '提纲版') {
     script = toOutlineScript(script);
   }
@@ -760,8 +1166,8 @@ function assembleCard(selections, prevHash) {
   }
 
   // --- Pick titles (3, first must have brand, at least 2 with brand) ---
-  var brandTitles = pool.title_pool.filter(function(t){ return t.indexOf('闪电狗AI快聘') !== -1; });
-  var nonBrandTitles = pool.title_pool.filter(function(t){ return t.indexOf('闪电狗AI快聘') === -1; });
+  var brandTitles = themedTitles.filter(function(t){ return t.indexOf('闪电狗AI快聘') !== -1; });
+  var nonBrandTitles = themedTitles.filter(function(t){ return t.indexOf('闪电狗AI快聘') === -1; });
   var t1 = pickRandom(brandTitles);
   var t2 = pickRandomExcluding(brandTitles, t1);
   var t3 = nonBrandTitles.length > 0 ? pickRandom(nonBrandTitles) : pickRandomExcluding(brandTitles, t1);
@@ -774,7 +1180,11 @@ function assembleCard(selections, prevHash) {
   var comment_replies = pickN(pool.reply_pool, 5);
 
   // --- Shots ---
-  var shots = getShots(sm, mp);
+  var shots = buildThemeShots(theme, selections, {
+    pageSource: pageSource,
+    condText: condText,
+    includeMessageNotification: includeMessageNotification
+  });
 
   // --- Summary ---
   var summary = SUMMARY_TEMPLATES[comboKey] || '拍一条关于闪电狗AI快聘的视频';
@@ -784,16 +1194,36 @@ function assembleCard(selections, prevHash) {
     video_type: vt, main_point: mp, shoot_mode: sm, script_mode: scm,
     summary: summary, opening: opening, script: script, titles: titles,
     shots: shots, comment_questions: comment_questions, comment_replies: comment_replies,
-    recommended_duration: recommendedDuration
+    recommended_duration: recommendedDuration,
+    script_full: scriptFull,
+    theme: theme,
+    page_source: pageSource,
+    include_message_notification: includeMessageNotification,
+    theme_consistency_rules: theme_consistency_rules,
+    page_alignment_rules: page_alignment_rules
   };
   card.self_check = runSelfCheck(card);
 
   // --- Anti-repeat: if hash matches previous, force re-roll key slots ---
   if (prevHash && hashCard(card) === prevHash) {
-    card.opening[0] = pickRandomExcluding(pool.hook, hook);
-    card.opening[1] = pickRandomExcluding(pool.hook, card.opening[0]);
+    card.opening = pickN(openingSource, 3, opening);
     card.titles[0] = pickRandomExcluding(brandTitles, t1);
     card.comment_questions = pickN(pool.comment_question_pool, 2, comment_questions);
+    card.script = buildThemeScript(theme, selections, {
+      judgement: judgement,
+      pageSource: pageSource,
+      condText: condText,
+      includeMessageNotification: includeMessageNotification
+    });
+    card.script_full = card.script.slice();
+    if (scm === '提纲版') {
+      card.script = toOutlineScript(card.script);
+    }
+    card.shots = buildThemeShots(theme, selections, {
+      pageSource: pageSource,
+      condText: condText,
+      includeMessageNotification: includeMessageNotification
+    });
     card.self_check = runSelfCheck(card);
   }
 
@@ -871,6 +1301,7 @@ function runSelfCheck(card) {
   var interview_speed_accuracy_passed = true;
   var interview_step_speed_passed = !allText.match(/几秒.{0,6}(找岗|找工作|推荐|全流程)/);
   var full_flow_speed_passed = !allText.match(/2.{0,2}3分钟.{0,6}(约面试|约面)/);
+  var title_script_shot_consistency_passed = checkTitleScriptShotConsistency(card);
 
   var checks = {
     brand_name_included: brand_name_included,
@@ -892,7 +1323,8 @@ function runSelfCheck(card) {
     interview_speed_overclaim_passed: interview_speed_overclaim_passed,
     interview_speed_accuracy_passed: interview_speed_accuracy_passed,
     interview_step_speed_passed: interview_step_speed_passed,
-    full_flow_speed_passed: full_flow_speed_passed
+    full_flow_speed_passed: full_flow_speed_passed,
+    title_script_shot_consistency_passed: title_script_shot_consistency_passed
   };
   checks.pass = Object.entries(checks).every(function(entry) {
     if (entry[0] === 'brand_in_titles_count') return entry[1] >= 2;
