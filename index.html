@@ -67,9 +67,9 @@ const QUESTIONS = [
   {
     key: 'video_type', step: '第1题 / 共4题', title: '这条视频你准备拍哪一种？',
     options: [
-      { value: '真实试用型', label: '拍我试了之后的真实感觉', desc: '就是拍你自己试了闪电狗以后，觉得哪里好用、哪里方便' },
       { value: '避坑经历型', label: '拍我以前找工作踩过的坑', desc: '就是讲你以前找工作被坑过什么，现在为什么更在意工资和岗位是不是真的' },
       { value: '效率挑战型', label: '拍我现场试试看闪电狗到底快不快', desc: '就是你边操作边拍，看看选好岗位后约面试到底有多快' },
+      { value: '真实试用型', label: '拍我试了之后的真实感觉', desc: '就是拍你自己试了闪电狗以后，觉得哪里好用、哪里方便' },
       { value: '经验提问型', label: '拍一个找工作的问题，顺便带大家评论', desc: '就是先聊一个大家都关心的找工作问题，再自然带出闪电狗' },
     ]
   },
@@ -82,12 +82,12 @@ const QUESTIONS = [
     ]
   },
   {
-    key: 'shoot_mode', step: '第3题 / 共4题', title: '你拍起来最顺手的是哪种？',
+    key: 'shoot_mode', step: '第3题 / 共4题', title: '开头先露脸，这是必须的；后面你想怎么拍？',
     options: [
-      { value: '对镜口播_录屏补充', label: '我对着镜头直接说', desc: '适合愿意露脸，自己对着手机讲几句的人' },
-      { value: '纯录屏_配音', label: '我录手机画面，再配音', desc: '适合不想露脸，只想录操作过程再配几句说明的人' },
-      { value: '环境画面_字幕配音', label: '我拍点上班、宿舍、路上的画面', desc: '适合拍生活画面，再配字幕或者配音的人' },
-      { value: '边拍边说', label: '我边走边拍，边说几句', desc: '适合想拍得更自然一点，不想太正式的人' },
+      { value: '对镜口播_录屏补充', label: '露脸开头后，我继续对着镜头说', desc: '适合开头露脸后，后面也一直对着手机讲的人' },
+      { value: '纯录屏_配音', label: '露脸开头后，我切手机画面再配音', desc: '适合开头先露脸，后面主要录操作过程再配几句说明的人' },
+      { value: '环境画面_字幕配音', label: '露脸开头后，我拍上班、宿舍、路上的画面', desc: '适合开头先露脸，后面拍生活画面再配字幕或配音的人' },
+      { value: '边拍边说', label: '露脸开头后，我边走边拍边说', desc: '适合开头先露脸，后面想拍得更自然一点的人' },
     ]
   },
   {
@@ -120,6 +120,29 @@ function pickRandomExcluding(arr, excludeItem) {
 }
 function hashCard(c) {
   return [c.opening[0], c.titles[0], c.comment_questions[0], c.script[1]||''].join('|');
+}
+var RECOMMENDED_DURATIONS = {
+  '避坑经历型': '35-45秒',
+  '真实试用型': '30-40秒',
+  '经验提问型': '25-35秒',
+  '效率挑战型': '20-30秒'
+};
+var SHOT_DURATION_HINTS = {
+  0: '3-5秒',
+  1: '6-8秒',
+  2: '8-12秒',
+  3: '6-10秒',
+  4: '4-6秒'
+};
+function getRecommendedDuration(videoType) {
+  return RECOMMENDED_DURATIONS[videoType] || '30-40秒';
+}
+function withShotDurations(shots) {
+  return shots.map(function(shot, idx) {
+    var hint = SHOT_DURATION_HINTS[idx] || '4-6秒';
+    if (shot.indexOf('建议时长') !== -1) return shot;
+    return shot + '（建议时长 ' + hint + '）';
+  });
 }
 
 // ============================================================
@@ -626,26 +649,30 @@ var SUMMARY_TEMPLATES = {
 // ============================================================
 var SHOT_TEMPLATES = {
   '对镜口播_录屏补充': {
-    '岗位真实_薪资真实': ['镜头1：对着镜头讲开头（表情自然）','镜头2：手机录屏——打开闪电狗AI快聘，浏览岗位列表','镜头3：手机录屏——点进岗位看详情（工资、要求、地址）','镜头4：手机录屏——跟AI问岗位细节','镜头5：切回镜头说收尾'],
-    'AI按条件推荐岗位': ['镜头1：对着镜头说开头（上半身，光线亮一点）','镜头2：手机录屏——打开闪电狗AI快聘小程序，输入条件','镜头3：手机录屏——AI推荐岗位列表，滑动查看','镜头4：手机录屏——继续跟AI说条件，缩小范围','镜头5：切回镜头，说收尾那段话'],
-    '选好岗位后几秒约面_全流程2到3分钟': ['镜头1：对着镜头说开头','镜头2：手机录屏——跟AI说条件，浏览推荐岗位','镜头3：手机录屏——选岗位看详情','镜头4：手机录屏——点击约面试，显示约面成功','镜头5：切回镜头说收尾']
+    '岗位真实_薪资真实': ['镜头1：真人露脸开头，先说第一句钩子','镜头2：继续对着镜头补一句自己的经历或判断','镜头3：手机录屏——打开闪电狗AI快聘，浏览岗位列表','镜头4：手机录屏——点进岗位看详情（工资、要求、地址）','镜头5：切回镜头说收尾'],
+    'AI按条件推荐岗位': ['镜头1：真人露脸开头，先说第一句钩子','镜头2：继续对着镜头补一句你自己的感受','镜头3：手机录屏——打开闪电狗AI快聘小程序，输入条件','镜头4：手机录屏——AI推荐岗位列表，继续缩小范围','镜头5：切回镜头，说收尾那段话'],
+    '选好岗位后几秒约面_全流程2到3分钟': ['镜头1：真人露脸开头，先说第一句钩子','镜头2：继续对着镜头补一句今天要实测什么','镜头3：手机录屏——跟AI说条件，浏览推荐岗位','镜头4：手机录屏——选岗位看详情，点击约面试','镜头5：切回镜头说收尾']
   },
   '纯录屏_配音': {
-    '岗位真实_薪资真实': ['镜头1：录屏——打开闪电狗AI快聘小程序','镜头2：录屏——浏览岗位列表，点进岗位看详情','镜头3：录屏——跟AI问岗位细节','镜头4：录屏——收尾画面'],
-    'AI按条件推荐岗位': ['镜头1：录屏——打开闪电狗AI快聘小程序','镜头2：录屏——跟AI输入找工作条件','镜头3：录屏——AI推荐岗位列表，继续缩小范围','镜头4：录屏——收尾画面'],
-    '选好岗位后几秒约面_全流程2到3分钟': ['镜头1：录屏——打开闪电狗AI快聘小程序','镜头2：录屏——跟AI说条件，浏览推荐岗位','镜头3：录屏——选岗位看详情，点约面试，显示约面成功','镜头4：录屏——收尾画面']
+    '岗位真实_薪资真实': ['镜头1：真人露脸开头，先说第一句钩子','镜头2：手机录屏——打开闪电狗AI快聘小程序','镜头3：录屏——浏览岗位列表，点进岗位看详情','镜头4：录屏——跟AI问岗位细节','镜头5：收尾时可补一小段露脸或用收尾画面'],
+    'AI按条件推荐岗位': ['镜头1：真人露脸开头，先说第一句钩子','镜头2：手机录屏——打开闪电狗AI快聘小程序','镜头3：录屏——跟AI输入找工作条件','镜头4：录屏——AI推荐岗位列表，继续缩小范围','镜头5：收尾时可补一小段露脸或用收尾画面'],
+    '选好岗位后几秒约面_全流程2到3分钟': ['镜头1：真人露脸开头，先说第一句钩子','镜头2：手机录屏——打开闪电狗AI快聘小程序','镜头3：录屏——跟AI说条件，浏览推荐岗位','镜头4：录屏——选岗位看详情，点约面试，显示约面成功','镜头5：收尾时可补一小段露脸或用收尾画面']
   },
   '环境画面_字幕配音': {
-    '_default': ['镜头1：上班路上或宿舍走廊的画面（配字幕）','镜头2：手机操作或生活场景画面（配字幕）','镜头3：工厂门口或路上的画面（配字幕）','镜头4：收尾画面（配字幕引导评论区）']
+    '_default': ['镜头1：真人露脸开头，先说第一句钩子','镜头2：手机操作或生活场景画面（配字幕）','镜头3：上班路上、宿舍或厂区外景画面（配字幕）','镜头4：补一个细节画面或手机画面（配字幕）','镜头5：收尾画面（配字幕引导评论区）']
   },
   '边拍边说': {
-    '_default': ['镜头1：边走边拍，说开头','镜头2：继续走，说过渡内容','镜头3：停下来展示手机画面','镜头4：继续走，说收尾']
+    '_default': ['镜头1：真人露脸开头，先说第一句钩子','镜头2：继续边走边拍，补一句过渡','镜头3：停下来展示手机画面','镜头4：继续走着说结果或感受','镜头5：最后一句收尾']
   }
 };
 
 function getShots(shoot_mode, main_point) {
   var modeShots = SHOT_TEMPLATES[shoot_mode];
-  return (modeShots[main_point] || modeShots['_default'] || SHOT_TEMPLATES['对镜口播_录屏补充'][main_point]).slice();
+  var shots = (modeShots[main_point] || modeShots['_default'] || SHOT_TEMPLATES['对镜口播_录屏补充'][main_point]).slice();
+  if (shots.length && shots[0].indexOf('真人露脸开头') === -1) {
+    shots.unshift('镜头1：真人露脸开头，先说第一句钩子');
+  }
+  return withShotDurations(shots);
 }
 
 // ============================================================
@@ -689,22 +716,23 @@ function assembleCard(selections, prevHash) {
     else hook = hook + '说实话挺烦的。'; // fallback: append pain word
   }
 
-  // --- Build opening (3 sentences) ---
-  var opening;
-  if (vt === '真实试用型') {
-    opening = [hook, '我前两天试了一个叫闪电狗AI快聘的小程序，' + prodIntro + '。', judgement + '，今天给你们看看。'];
-  } else if (vt === '避坑经历型') {
-    opening = [hook, '后来我就特别在意这个。最近试了一个叫闪电狗AI快聘的小程序，给你们看看。', judgement + '。'];
-  } else if (vt === '效率挑战型') {
-    opening = [hook + '今天来试试闪电狗AI快聘，' + challenge + '。', '我直接给你们看，不吹不黑。', judgement + '。'];
-  } else { // 经验提问型
-    opening = [hook, '最近发现一个小程序叫闪电狗AI快聘，' + prodIntro + '，想听听你们觉得怎么样。', judgement + '。'];
-  }
+  // --- Build opening hook options (3 candidates, only for first 1-2 lines) ---
+  var opening = [hook].concat(pickN(pool.hook, 2, [hook]));
 
-  // --- Build script from skeleton ---
+  // --- Build body script only (continues after opening) ---
   var skeleton = SKELETONS[sm] && SKELETONS[sm][vt];
   if (!skeleton) skeleton = SKELETONS['对镜口播_录屏补充'][vt];
-  var script = skeleton.map(function(tpl) {
+  var bodyLines = skeleton.slice(1);
+  if (vt === '真实试用型') {
+    bodyLines[0] = '【接着开头往下讲】\n"我前两天试了一个小程序，叫闪电狗AI快聘，' + prodIntro + '。"';
+  } else if (vt === '避坑经历型') {
+    bodyLines[0] = '【接着开头往下讲】\n"我以前就碰到过，' + painDetail + '。后来我就特别在意这个，所以去看了看闪电狗AI快聘。"';
+  } else if (vt === '效率挑战型') {
+    bodyLines[0] = '【接着开头往下讲】\n"今天我就直接试试闪电狗AI快聘，' + challenge + '。"';
+  } else {
+    bodyLines[0] = '【接着开头往下讲】\n"最近发现一个小程序叫闪电狗AI快聘，' + prodIntro + '，我想听听你们怎么想。"';
+  }
+  var script = bodyLines.map(function(tpl) {
     return tpl
       .replace('{hook}', hook)
       .replace('{pain_detail}', painDetail)
@@ -717,6 +745,7 @@ function assembleCard(selections, prevHash) {
       .replace('{capability}', capability)
       .replace('{cond1}', conds[0]||'').replace('{cond2}', conds[1]||'').replace('{cond3}', conds[2]||'');
   });
+  script.unshift('【第一个镜头】真人露脸开头，先说你上面选的一句开头。');
 
   // Convert to outline if needed
   if (scm === '提纲版') {
@@ -749,17 +778,20 @@ function assembleCard(selections, prevHash) {
 
   // --- Summary ---
   var summary = SUMMARY_TEMPLATES[comboKey] || '拍一条关于闪电狗AI快聘的视频';
+  var recommendedDuration = getRecommendedDuration(vt);
 
   var card = {
     video_type: vt, main_point: mp, shoot_mode: sm, script_mode: scm,
     summary: summary, opening: opening, script: script, titles: titles,
-    shots: shots, comment_questions: comment_questions, comment_replies: comment_replies
+    shots: shots, comment_questions: comment_questions, comment_replies: comment_replies,
+    recommended_duration: recommendedDuration
   };
   card.self_check = runSelfCheck(card);
 
   // --- Anti-repeat: if hash matches previous, force re-roll key slots ---
   if (prevHash && hashCard(card) === prevHash) {
     card.opening[0] = pickRandomExcluding(pool.hook, hook);
+    card.opening[1] = pickRandomExcluding(pool.hook, card.opening[0]);
     card.titles[0] = pickRandomExcluding(brandTitles, t1);
     card.comment_questions = pickN(pool.comment_question_pool, 2, comment_questions);
     card.self_check = runSelfCheck(card);
@@ -919,6 +951,12 @@ function escapeHtml(str) {
 var _copyStore = {};
 function storeCopy(key, text) { _copyStore[key] = text; }
 function doCopy(key, btnEl) { copyText(_copyStore[key] || '', btnEl); }
+function getOptionLabel(questionKey, value) {
+  var question = QUESTIONS.find(function(q) { return q.key === questionKey; });
+  if (!question) return value;
+  var opt = question.options.find(function(item) { return item.value === value; });
+  return opt ? opt.label : value;
+}
 
 // ============================================================
 // RENDER: Intro
@@ -989,30 +1027,12 @@ function prevQuestion() { if (state.currentQ > 0) { state.currentQ--; renderQuiz
 function renderResult() {
   var c = state.card;
   var sc = c.self_check;
+  if (typeof console !== 'undefined' && console.debug) console.debug('task_card_self_check', sc);
 
   storeCopy('opening', c.opening.join('\n'));
   storeCopy('script', c.script.join('\n\n'));
   storeCopy('replies', c.comment_replies.join('\n'));
   c.titles.forEach(function(t, i) { storeCopy('title_' + i, t); });
-
-  var checkLabels = {
-    brand_name_included: '品牌名出现', brand_in_script: '脚本含品牌', brand_in_visual: '画面含品牌',
-    brand_in_titles_count: '标题含品牌(' + sc.brand_in_titles_count + '/3)',
-    default_title_has_brand: '默认标题含品牌', brand_early_in_script: '品牌前置',
-    has_pain_point: '有痛点铺垫', has_one_main_point_only: '只讲1个卖点',
-    has_personal_judgement: '有个人视角', has_comment_question: '有评论区问题',
-    banned_words_passed: '无违禁词', no_app_wording: '无APP字样',
-    banned_competitor_passed: '无竞品提及', product_capability_accuracy_passed: '产品能力准确',
-    no_overclaim_passed: '无夸大承诺', no_fabricated_long_term_experience_passed: '无编造长期经历',
-    interview_speed_overclaim_passed: '速度无夸大', interview_speed_accuracy_passed: '速度表达准确',
-    interview_step_speed_passed: '约面步骤速度正确', full_flow_speed_passed: '全流程速度正确',
-    pass: '总检查'
-  };
-
-  function checkVal(key, val) {
-    if (key === 'brand_in_titles_count') return val >= 2;
-    return val === true;
-  }
 
   var html = '<div class="fade-in">';
   html += '<div class="header"><h1>你的拍摄任务卡 <span class="version-tag">第' + state.version + '版</span></h1><p class="sub">根据你的选择随机生成</p></div>';
@@ -1021,7 +1041,7 @@ function renderResult() {
   html += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px">';
   html += '<span style="font-size:11px;padding:4px 8px;border-radius:6px;background:#fff3ed;color:#ff6b35">' + c.video_type + '</span>';
   html += '<span style="font-size:11px;padding:4px 8px;border-radius:6px;background:#f0f7ff;color:#2563eb">' + c.main_point + '</span>';
-  html += '<span style="font-size:11px;padding:4px 8px;border-radius:6px;background:#f0fdf4;color:#166534">' + c.shoot_mode + '</span>';
+  html += '<span style="font-size:11px;padding:4px 8px;border-radius:6px;background:#f0fdf4;color:#166534">' + getOptionLabel('shoot_mode', c.shoot_mode) + '</span>';
   html += '<span style="font-size:11px;padding:4px 8px;border-radius:6px;background:#faf5ff;color:#7c3aed">' + c.script_mode + '</span>';
   html += '</div>';
 
@@ -1031,15 +1051,23 @@ function renderResult() {
   html += '<div class="section-content">' + c.summary + '</div>';
   html += '</div></div>';
 
-  // 2. Opening
+  // 2. Recommended duration
+  html += '<div class="card"><div class="result-section">';
+  html += '<div class="section-label">建议时长</div>';
+  html += '<div class="section-content">' + c.recommended_duration + '</div>';
+  html += '</div></div>';
+
+  // 3. Opening
   html += '<div class="card"><div class="result-section">';
   html += '<div class="section-label">开头怎么说</div><div class="section-content">';
+  html += '<div style="font-size:12px;color:#888;margin-bottom:8px">只用来拍前3秒，选一句最顺口的先说。</div>';
   c.opening.forEach(function(s, i) { html += '<div style="margin-bottom:6px">' + (i+1) + '. ' + s + '</div>'; });
   html += '</div><div class="btn-row"><button class="btn-sm" onclick="doCopy(\'opening\', this)">复制开头</button></div>';
   html += '</div></div>';
 
-  // 3. Script
+  // 4. Script
   html += '<div class="card"><div class="result-section">';
+  html += '<div style="font-size:12px;color:#888;margin-bottom:8px">从开头后面继续往下讲，不再重复第一句。</div>';
   html += '<div class="section-label">正文怎么讲（' + c.script_mode + '）</div><div class="section-content">';
   c.script.forEach(function(s) {
     html += '<div style="margin-bottom:12px;padding:10px;background:#fafafa;border-radius:10px;font-size:13px;line-height:1.7">' + escapeHtml(s) + '</div>';
@@ -1047,13 +1075,13 @@ function renderResult() {
   html += '</div><div class="btn-row"><button class="btn-sm" onclick="doCopy(\'script\', this)">复制脚本</button></div>';
   html += '</div></div>';
 
-  // 4. Shots
+  // 5. Shots
   html += '<div class="card"><div class="result-section">';
   html += '<div class="section-label">拍哪几个镜头</div><div class="section-content"><ul>';
   c.shots.forEach(function(s) { html += '<li>' + s + '</li>'; });
   html += '</ul></div></div></div>';
 
-  // 5. Titles
+  // 6. Titles
   html += '<div class="card"><div class="result-section">';
   html += '<div class="section-label">标题怎么写（3个备选）</div>';
   c.titles.forEach(function(t, i) {
@@ -1063,32 +1091,18 @@ function renderResult() {
   });
   html += '</div></div>';
 
-  // 6. Comment questions
+  // 7. Comment questions
   html += '<div class="card"><div class="result-section">';
   html += '<div class="section-label">评论区问什么</div><div class="section-content">';
   c.comment_questions.forEach(function(q, i) { html += '<div style="margin-bottom:6px">' + (i+1) + '. ' + q + '</div>'; });
   html += '</div></div></div>';
 
-  // 7. Comment replies
+  // 8. Comment replies
   html += '<div class="card"><div class="result-section">';
   html += '<div class="section-label">别人问了怎么回</div><div class="section-content">';
   c.comment_replies.forEach(function(r, i) { html += '<div style="margin-bottom:6px">' + (i+1) + '. ' + r + '</div>'; });
   html += '</div><div class="btn-row"><button class="btn-sm" onclick="doCopy(\'replies\', this)">复制评论回复</button></div>';
   html += '</div></div>';
-
-  // 8. Self check
-  html += '<div class="card"><div class="result-section">';
-  html += '<div class="section-label">自检结果 ';
-  html += sc.pass ? '<span style="color:#166534">全部通过</span>' : '<span style="color:#991b1b">有未通过项</span>';
-  html += '</div><div class="check-grid">';
-  Object.entries(sc).forEach(function(entry) {
-    var k = entry[0], v = entry[1];
-    if (k === 'pass') return;
-    var ok = checkVal(k, v);
-    var label = checkLabels[k] || k;
-    html += '<div class="check-item ' + (ok ? '' : 'fail') + '">' + (ok ? '&#10003;' : '&#10007;') + ' ' + label + '</div>';
-  });
-  html += '</div></div></div>';
 
   // Bottom actions
   html += '<div style="display:flex;flex-direction:column;gap:8px;margin-top:16px;padding-bottom:20px">';
@@ -1107,7 +1121,7 @@ function renderResult() {
 function copyFullCard() {
   var c = state.card;
   var text = '【拍摄任务卡】第' + state.version + '版\n\n' +
-    '视频类型：' + c.video_type + '\n重点卖点：' + c.main_point + '\n拍摄方式：' + c.shoot_mode + '\n脚本模式：' + c.script_mode + '\n\n' +
+    '视频类型：' + c.video_type + '\n重点卖点：' + c.main_point + '\n拍摄方式：' + getOptionLabel('shoot_mode', c.shoot_mode) + '\n脚本模式：' + c.script_mode + '\n建议时长：' + c.recommended_duration + '\n\n' +
     '【这条视频拍什么】\n' + c.summary + '\n\n' +
     '【开头怎么说】\n' + c.opening.map(function(s,i){return (i+1)+'. '+s;}).join('\n') + '\n\n' +
     '【正文怎么讲（' + c.script_mode + '）】\n' + c.script.join('\n\n') + '\n\n' +
