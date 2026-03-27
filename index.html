@@ -671,15 +671,148 @@ var THEMED_SCRIPT_POOLS = {
   }
 };
 
+var main_promo_rules = {
+  info_clarity: '岗位信息写得更清楚，少踩坑',
+  ai_recommendation: '跟AI说条件，更快推荐合适岗位',
+  interview_speed: '选好岗位后，约面试很快'
+};
+
+var supporting_evidence_rules = {
+  info_clarity: ['工资', '薪资构成', '福利标签', '包吃住', '宿舍环境', '体检要求', '体检费', '面试与入职', '离职条件', '岗位要求', '岗位特点'],
+  ai_recommendation: ['工资', '福利标签', '宿舍环境', '体检要求', '岗位要求', '面试与入职'],
+  interview_speed: ['职位详情页', '约面成功', '消息通知页']
+};
+
+var supporting_evidence_pool = {
+  info_clarity: [
+    '像工资怎么写、福利标签、体检要求、岗位要求这些，我都先看了一遍。',
+    '我会重点看工资、宿舍、体检费、面试与入职这些关键信息有没有写清楚。',
+    '工资、包吃住、体检要求、岗位特点这些，我都会先在页面上看明白。',
+    '我点开以后会先看工资、福利标签、宿舍和面试与入职这些细节。',
+    '像体检费、离职条件、面试与入职、要带什么材料这些，这次我也顺手看了一遍。'
+  ],
+  ai_recommendation: [
+    '推荐出来以后，我又点开职位详情页确认工资、福利和岗位要求这些信息。',
+    '我没有只停在推荐列表，还会继续看详情页里的工资和体检要求。',
+    '它先把岗位推给我，我再点开详情页看宿舍、福利和面试信息。',
+    '我会一边缩小范围，一边看职位详情页里的工资、福利和要求。'
+  ],
+  interview_speed: [
+    '我选中岗位以后直接点约面试，这一步基本不用来回找入口。',
+    '推荐岗位、点开详情页、再到约面成功，这一套动作我都顺着走了一遍。',
+    '如果再看消息通知页，还能顺手确认约面结果和提醒。'
+  ]
+};
+
+var experience_journey_pool = {
+  info_clarity: {
+    intro: [
+      '我最近试了下闪电狗AI快聘小程序，想看看上面的岗位信息是不是写得更清楚。',
+      '我这次专门试了下闪电狗AI快聘小程序，重点看它是不是能把关键信息写明白。',
+      '我最近在试闪电狗AI快聘小程序，主要想看找工作时会不会少踩坑。'
+    ],
+    action: [
+      '我先跟它说了几个找工作要求，它先给我推荐了一批岗位。',
+      '我先用对话把自己的要求说了一遍，它很快就推了一些岗位出来。',
+      '我先把条件说给它听，再看它会先推荐哪些岗位。'
+    ],
+    narrowing: [
+      '推荐出来以后，我又按自己的要求继续缩小范围，没有只停在第一屏。',
+      '它先给了一些岗位，我又继续往下筛，把不合适的先排掉。',
+      '我先看推荐结果，再按自己的要求继续往下缩范围。'
+    ],
+    page_view: [
+      '我不只看推荐列表，还会点开职位详情页和同城搜索页去看更多信息。',
+      '我没有只看它推荐的岗位，还切到职位详情页和同城搜索页继续看。',
+      '我会从推荐列表再点进职位详情页，顺手把同城搜索页也看一遍。'
+    ],
+    judgement: [
+      '至少这些关键信息写得比较清楚，我自己看起来会更有数一点。',
+      '像这种把信息写明白的岗位，我会更愿意先了解，不容易白跑一趟。',
+      '对我来说，页面上把关键信息写清楚一点，找工作时心里会更踏实。'
+    ],
+    close: [
+      '你们找工作的时候，最先会看哪一类信息？',
+      '如果是你们，会先看工资、福利还是体检要求？',
+      '你们平时最怕哪类信息写得不清楚？'
+    ]
+  },
+  ai_recommendation: {
+    intro: [
+      '我最近试了下闪电狗AI快聘小程序，想看看跟AI说条件到底有多省事。',
+      '我这次专门试了下闪电狗AI快聘小程序，重点看它按条件推荐岗位顺不顺。',
+      '我最近在试闪电狗AI快聘小程序，主要想看它能不能更快推到合适岗位。'
+    ],
+    action: [
+      '我先在闪电狗AI快聘小程序里跟AI说了几个条件，比如',
+      '我先把找工作的条件直接说给AI听，比如',
+      '我先跟AI说了几个具体要求，比如'
+    ],
+    narrowing: [
+      '它先给我推荐了一批岗位，我又继续补条件，把范围越缩越小。',
+      '推荐岗位出来以后，我又接着问，把更想看的岗位先筛出来。',
+      '它先推了一些岗位出来，我再继续细问，把更合适的先挑出来。'
+    ],
+    page_view: [
+      '我没有只停在推荐这一步，还会点开职位详情页确认信息。',
+      '我把推荐结果看完以后，还会继续点开详情页核对信息。',
+      '推荐完以后，我还会再看职位详情页里的信息是不是写得清楚。'
+    ],
+    judgement: [
+      '对我来说，这种先说条件再推荐岗位的方式会快不少。',
+      '至少不用自己一个个翻岗位，整个过程会顺很多。',
+      '我自己试下来，这种找法比盲翻岗位更省时间一点。'
+    ],
+    close: [
+      '你们找工作时最想先说清楚的条件是什么？',
+      '如果让你先提要求，你最在意距离、班次还是环境？',
+      '你们会先说工资要求，还是先说通勤和宿舍？'
+    ]
+  },
+  interview_speed: {
+    intro: [
+      '我最近试了下闪电狗AI快聘小程序，想看看从说条件到约面试到底有多快。',
+      '我这次专门试了下闪电狗AI快聘小程序，重点看选好岗位后约面试这一步顺不顺。',
+      '我最近在试闪电狗AI快聘小程序，主要想看整个约面流程会不会更省事。'
+    ],
+    action: [
+      '我先把找工作的条件说了一遍，它先给我推荐了一些岗位。',
+      '我先把自己的要求说给它听，它很快就推了一批岗位出来。',
+      '我先说了几个条件，再看它会先推荐哪些岗位。'
+    ],
+    narrowing: [
+      '推荐出来以后，我先挑了一个更合适的岗位，再点进去看详情。',
+      '它先给了我几个岗位，我选中一个以后继续往下走。',
+      '我先看推荐结果，再选一个更合适的岗位点进去。'
+    ],
+    page_view: [
+      '我点开职位详情页确认完信息以后，就直接去试约面试这一步。',
+      '我把详情页信息看完，就顺手点了约面试，没有再来回找入口。',
+      '我先确认岗位信息，再直接点约面试，想看这一步到底有多快。'
+    ],
+    judgement: [
+      '我自己试下来，选好岗位后约面试这一步确实挺快。',
+      '对我来说，这种从推荐到约面的流程会顺很多。',
+      '至少关键步骤都连得上，不用来回反复问。'
+    ],
+    close: [
+      '你们找工作时，最烦的是推荐慢还是约面慢？',
+      '如果是你们，更在意推荐快还是约面快？',
+      '你们会不会也比较在意约面这一步顺不顺？'
+    ]
+  }
+};
+
 function flattenTitlePoolByTheme(pool) {
   if (Array.isArray(pool)) return pool.slice();
   return Object.keys(pool).reduce(function(acc, key) { return acc.concat(pool[key]); }, []);
 }
 
 function chooseTheme(mainPoint) {
+  if (mainPoint === '岗位真实_薪资真实') return 'info_clarity';
   if (mainPoint === 'AI按条件推荐岗位') return 'ai_recommendation';
   if (mainPoint === '选好岗位后几秒约面_全流程2到3分钟') return 'interview_speed';
-  return pickRandom(['salary', 'benefits', 'medical_fee', 'interview_info', 'resignation', 'info_clarity']);
+  return 'info_clarity';
 }
 
 function pickPageSource(theme) {
@@ -859,81 +992,87 @@ function checkBrandAnchorBeforeCapability(card) {
 }
 
 function buildThemeScript(theme, selections, context) {
-  var pool = THEMED_SCRIPT_POOLS[theme];
-  var lines = [
-    pickBridgeIntro(theme, context),
-    pickRandom(pool.detail),
-    pickRandom(judgement_rewrite_pool[theme] || judgement_rewrite_pool.info_clarity)
-  ];
+  var journey = experience_journey_pool[theme] || experience_journey_pool.info_clarity;
+  var evidence = supporting_evidence_pool[theme] || supporting_evidence_pool.info_clarity;
+  var judgement = judgement_rewrite_pool[theme] || judgement_rewrite_pool.info_clarity;
+  var lines = [];
+
+  if (theme === 'info_clarity') {
+    lines.push(pickRandom(journey.intro));
+    lines.push(pickRandom(journey.action));
+    lines.push(pickRandom(journey.narrowing));
+    lines.push(pickRandom(journey.page_view));
+    lines.push(pickRandom(evidence));
+    lines.push(pickRandom(journey.judgement));
+    if (selections.script_mode === '逐句版') lines.push(pickRandom(journey.close));
+    return lines;
+  }
+
   if (theme === 'ai_recommendation') {
-    lines.splice(1, 0, '我在闪电狗AI快聘小程序里先跟AI说了条件：' + context.condText + '，它按我的要求推荐了几个岗位出来。');
+    lines.push(pickRandom(journey.intro));
+    lines.push(pickRandom(journey.action) + context.condText + '。');
+    lines.push(pickRandom(journey.narrowing));
+    lines.push(pickRandom(journey.page_view));
+    lines.push(pickRandom(evidence));
+    lines.push(pickRandom(journey.judgement));
+    if (selections.script_mode === '逐句版') lines.push(pickRandom(journey.close));
+    return lines;
   }
+
   if (theme === 'interview_speed') {
-    lines.splice(1, 0, '我在闪电狗AI快聘小程序里先看推荐岗位，再点进职位详情页选中岗位，接着直接点约面试。');
-    if (context.includeMessageNotification) {
-      lines.splice(2, 0, '约面成功后，我又在闪电狗AI快聘小程序里点开消息通知页看了一眼，里面能看到预约结果和提醒。');
+    lines.push(pickRandom(journey.intro));
+    lines.push(pickRandom(journey.action));
+    lines.push(pickRandom(journey.narrowing));
+    lines.push(pickRandom(journey.page_view));
+    var speedEvidence = evidence.slice();
+    if (!context.includeMessageNotification) {
+      speedEvidence = speedEvidence.filter(function(line) { return line.indexOf('消息通知页') === -1; });
     }
+    lines.push(pickRandom(speedEvidence));
+    if (context.includeMessageNotification) {
+      lines.push('约面成功后，我又去消息通知页看了一眼，预约结果和提醒都能接着看到。');
+    }
+    lines.push(pickRandom(journey.judgement));
+    if (selections.script_mode === '逐句版') lines.push(pickRandom(journey.close));
+    return lines;
   }
-  if (theme === 'salary' && context.pageSource === '同城搜索页') {
-    lines[0] = '我这次试了下闪电狗AI快聘小程序，不只看它推荐的岗位，我还切到同城搜索页去看了工资和标签。';
-  }
-  if (theme === 'medical_fee') {
-    lines[0] = '我在闪电狗AI快聘小程序里先看了岗位，再去职位详情页确认体检要求和体检费这块写得清不清楚。';
-    lines[1] = '我点开职位详情页看了体检要求、体检费和体检查什么项目。';
-  }
-  if (theme === 'interview_info') {
-    lines[0] = '我在闪电狗AI快聘小程序里先看了岗位，再去职位详情页确认面试与入职信息。';
-  }
-  if (theme === 'resignation') {
-    lines[0] = '我在闪电狗AI快聘小程序里先看了岗位，再去职位详情页确认离职条件这一栏。';
-  }
-  if (theme === 'benefits' && context.pageSource === '同城搜索页') {
-    lines[0] = '我这次试了下闪电狗AI快聘小程序，不只看它推荐的岗位，我还切到同城搜索页去看福利标签、包吃住、可坐、可预支这些。';
-  }
+
+  lines.push(pickRandom(journey.intro));
+  lines.push(pickRandom(journey.action));
+  lines.push(pickRandom(journey.page_view));
+  lines.push(pickRandom(evidence));
+  lines.push(pickRandom(judgement));
   return lines;
 }
 
 function buildThemeShots(theme, selections, context) {
   var shots = ['镜头1：真人露脸开头'];
-  if (theme === 'salary') {
-    shots.push('镜头2：录屏进入' + context.pageSource + '，先停留展示工资数字');
-    shots.push('镜头3：继续停留展示薪资构成或工资相关信息');
-    shots.push('镜头4：切回真人露脸或页面收尾');
-  } else if (theme === 'benefits') {
-    shots.push('镜头2：录屏进入' + context.pageSource + '，展示福利标签或宿舍环境信息');
-    shots.push('镜头3：继续展示包吃包住、可坐、可预支、岗位特点等内容');
-    shots.push('镜头4：切回真人露脸或页面收尾');
-  } else if (theme === 'medical_fee') {
-    shots.push('镜头2：录屏进入职位详情页，找到体检要求或体检费这一栏');
-    shots.push('镜头3：继续停留展示体检查什么项目、要不要体检费');
-    shots.push('镜头4：切回真人露脸或页面收尾');
-  } else if (theme === 'interview_info') {
-    shots.push('镜头2：录屏进入职位详情页，找到面试与入职信息');
-    shots.push('镜头3：继续展示面试要带什么、入职怎么安排');
-    shots.push('镜头4：切回真人露脸或页面收尾');
-  } else if (theme === 'resignation') {
-    shots.push('镜头2：录屏进入职位详情页，找到离职条件');
-    shots.push('镜头3：停留展示离职条件这一栏');
-    shots.push('镜头4：切回真人露脸或页面收尾');
-  } else if (theme === 'info_clarity') {
-    shots.push('镜头2：录屏进入职位详情页，展示工资、岗位要求或面试与入职信息');
-    shots.push('镜头3：录屏切到同城搜索页，展示工资和福利标签');
-    shots.push('镜头4：切回真人露脸或页面收尾');
+  if (theme === 'info_clarity') {
+    shots.push('镜头2：打开闪电狗AI快聘小程序，用对话或语音说找工作要求');
+    shots.push('镜头3：停留展示推荐岗位列表，并继续缩小范围');
+    shots.push('镜头4：点开职位详情页，展示工资、岗位要求、面试与入职等信息');
+    shots.push('镜头5：切到同城搜索页，展示工资、福利标签、包吃住等信息');
+    shots.push('镜头6：切回真人露脸或页面收尾');
   } else if (theme === 'ai_recommendation') {
-    shots.push('镜头2：录屏展示AI对话推荐页，输入条件：' + context.condText);
-    shots.push('镜头3：展示AI推荐岗位列表，并继续缩小范围');
-    shots.push('镜头4：点开一个职位详情页确认岗位信息');
+    shots.push('镜头2：打开闪电狗AI快聘小程序，用对话或语音输入条件：' + context.condText);
+    shots.push('镜头3：停留展示AI推荐岗位列表，并继续补条件缩小范围');
+    shots.push('镜头4：点开一个职位详情页，确认工资、福利或岗位要求');
     shots.push('镜头5：切回真人露脸或页面收尾');
   } else if (theme === 'interview_speed') {
-    shots.push('镜头2：录屏展示AI对话推荐页，输入条件');
-    shots.push('镜头3：展示推荐岗位列表并选中一个岗位');
-    shots.push('镜头4：进入职位详情页后点击约面试，拍到约面成功');
+    shots.push('镜头2：打开闪电狗AI快聘小程序，用对话或语音输入条件');
+    shots.push('镜头3：停留展示推荐岗位列表，并选中一个岗位');
+    shots.push('镜头4：进入职位详情页确认信息后点击约面试，拍到约面成功');
     if (context.includeMessageNotification) {
       shots.push('镜头5：录屏进入消息通知页，展示约面结果或提醒');
       shots.push('镜头6：切回真人露脸或页面收尾');
     } else {
       shots.push('镜头5：切回真人露脸或页面收尾');
     }
+  } else {
+    shots.push('镜头2：打开闪电狗AI快聘小程序，用对话或语音说找工作要求');
+    shots.push('镜头3：停留展示推荐岗位列表');
+    shots.push('镜头4：点开职位详情页或同城搜索页，展示关键信息');
+    shots.push('镜头5：切回真人露脸或页面收尾');
   }
   return withShotDurations(shots);
 }
@@ -981,15 +1120,15 @@ function checkTitleScriptShotConsistency(card) {
       hasAny(shotText, ['职位详情页']);
   }
   if (theme === 'ai_recommendation') {
-    var aiBase = hasAny(scriptText, ['AI对话推荐页', '说了条件', '推荐岗位']) &&
-      hasAny(shotText, ['AI对话推荐页', '推荐岗位']);
+    var aiBase = hasAny(scriptText, ['AI对话推荐页', '跟AI说了', '说给AI听', '说了条件', '具体要求', '推荐岗位', '推了一些岗位', '推荐了一批岗位']) &&
+      hasAny(shotText, ['AI对话推荐页', '推荐岗位', '推荐岗位列表']);
     var mentionsExtra = hasAny(scriptText, ['工资', '福利', '宿舍', '体检', '面试与入职', '离职条件']);
     if (!mentionsExtra) return aiBase;
     return aiBase && hasAny(shotText, ['职位详情页', '同城搜索页']);
   }
   if (theme === 'interview_speed') {
-    var speedBase = hasAny(scriptText, ['AI对话推荐页', '选中', '约面试', '约面成功']) &&
-      hasAny(shotText, ['AI对话推荐页', '选中', '约面试', '约面成功']);
+    var speedBase = hasAny(scriptText, ['推了一批岗位', '推荐出来以后', '挑了一个更合适的岗位', '选中一个以后', '约面试', '约面结果', '挺快']) &&
+      hasAny(shotText, ['推荐岗位', '选中一个岗位', '约面试', '约面成功']);
     if (hasAny(scriptText, ['消息通知页', '预约结果', '提醒', '状态'])) {
       return speedBase && hasAny(shotText, ['消息通知页', '预约结果', '提醒']);
     }
@@ -1660,6 +1799,27 @@ function checkSpokenLineNatural(card) {
   });
 }
 
+function checkMainPointVsEvidenceBalance(card) {
+  var theme = card.theme;
+  var scriptText = ((card.creator_task_view && card.creator_task_view.script) || card.script_full || card.script || []).join('\n');
+  function hasAny(words) {
+    return words.some(function(word) { return scriptText.indexOf(word) !== -1; });
+  }
+  if (theme === 'info_clarity') {
+    return hasAny(['信息写得', '写得比较清楚', '写清楚', '写明白', '少踩坑', '不容易白跑', '心里会更有数', '更踏实', '关键信息']) &&
+      hasAny(supporting_evidence_rules.info_clarity);
+  }
+  if (theme === 'ai_recommendation') {
+    return hasAny(['跟AI', '说给AI听', '说了几个', '说了条件', '推荐了一些岗位', '推荐了一批岗位', '缩小范围', '继续补条件']) &&
+      hasAny(['点开职位详情页', '点开详情页', '确认工资', '确认信息', '继续看详情页', '看宿舍、福利和面试信息', '职位详情页里的工资、福利和要求']);
+  }
+  if (theme === 'interview_speed') {
+    return hasAny(['约面试', '约面成功', '流程', '顺很多', '挺快', '更省事', '关键步骤都连得上']) &&
+      hasAny(['推荐岗位', '推荐了一些岗位', '推了一批岗位', '给了我几个岗位', '推荐哪些岗位', '选中一个岗位', '选中岗位以后', '选一个更合适的岗位点进去', '职位详情页']);
+  }
+  return true;
+}
+
 function runSelfCheck(card) {
   var front = card.creator_task_view || buildCreatorTaskView(card);
   var allText = [card.summary].concat(card.opening, card.script, card.titles, card.comment_questions, card.comment_replies, card.shots).join('\n');
@@ -1694,6 +1854,7 @@ function runSelfCheck(card) {
   var title_script_shot_consistency_passed = checkTitleScriptShotConsistency(card);
   var brand_anchor_before_capability_passed = checkBrandAnchorBeforeCapability(card);
   var spoken_line_natural_passed = checkSpokenLineNatural(card);
+  var main_point_vs_evidence_balance_passed = checkMainPointVsEvidenceBalance(card);
   var front_view_clean_passed = checkFrontViewClean(card);
   var spoken_vs_shot_separation_passed = checkSpokenVsShotSeparation(card);
   var page_consistency_passed = title_script_shot_consistency_passed;
@@ -1702,7 +1863,7 @@ function runSelfCheck(card) {
     return textMatchesPatterns(allText, rule.patterns);
   });
   var banned_terms_passed = bannedCheck.passed;
-  var douyin_safety_passed = banned_terms_passed && soft_rewrite_passed && page_consistency_passed && variant_bypass_passed && brand_anchor_before_capability_passed && spoken_line_natural_passed && front_view_clean_passed && spoken_vs_shot_separation_passed;
+  var douyin_safety_passed = banned_terms_passed && soft_rewrite_passed && page_consistency_passed && variant_bypass_passed && brand_anchor_before_capability_passed && spoken_line_natural_passed && main_point_vs_evidence_balance_passed && front_view_clean_passed && spoken_vs_shot_separation_passed;
 
   var checks = {
     brand_name_included: brand_name_included,
@@ -1728,6 +1889,7 @@ function runSelfCheck(card) {
     title_script_shot_consistency_passed: title_script_shot_consistency_passed,
     brand_anchor_before_capability_passed: brand_anchor_before_capability_passed,
     spoken_line_natural_passed: spoken_line_natural_passed,
+    main_point_vs_evidence_balance_passed: main_point_vs_evidence_balance_passed,
     front_view_clean_passed: front_view_clean_passed,
     spoken_vs_shot_separation_passed: spoken_vs_shot_separation_passed,
     banned_terms_passed: banned_terms_passed,
